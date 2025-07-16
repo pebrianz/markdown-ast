@@ -1,0 +1,25 @@
+{
+	"name": "markdown-ast",
+	"version": "0.0.0",
+	"main": "index.js",
+	"scripts": {
+		"dev": "vitest",
+		"test": "vitest run"
+	},
+	"author": "Pebrian",
+	"license": "MIT",
+	"description": "Markdown parser",
+	"packageManager": "yarn@4.9.2",
+	"devDependencies": {
+		"@biomejs/biome": "^2.0.5",
+		"@eslint/js": "^9.29.0",
+		"@types/node": "^24.0.4",
+		"assemblyscript": "^0.28.2",
+		"dedent": "^1.6.0",
+		"eslint": "^9.29.0",
+		"tsup": "^8.5.0",
+		"typescript": "^5.8.3",
+		"typescript-eslint": "^8.35.0",
+		"vitest": "^3.2.4"
+	}
+}
