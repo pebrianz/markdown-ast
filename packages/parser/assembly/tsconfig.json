@@ -1,0 +1,10 @@
+{
+	"extends": [
+		"../../../node_modules/.pnpm/assemblyscript@0.28.3/node_modules/assemblyscript/std/assembly.json"
+	],
+	"compilerOptions": {
+		"strictPropertyInitialization": false,
+		"noImplicitReturns": true
+	},
+	"include": ["./**/*.ts"]
+}

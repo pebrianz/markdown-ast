@@ -2,7 +2,11 @@
 	"name": "@markdown-ast/parser",
 	"scripts": {
 		"dev": "npm run root:dev --include-workspace-root --if-present",
-		"test": "npm run root:test --include-workspace-root --if-present"
+		"test": "npm run root:test --include-workspace-root --if-present",
+		"asbuild:debug": "asc assembly/index.ts --target debug",
+		"asbuild:release": "asc assembly/index.ts --target release",
+		"asbuild": "npm run asbuild:debug && npm run asbuild:release",
+		"start": "npx serve ."
 	},
 	"author": {
 		"email": "pebrianz117@gmail.com",
@@ -17,7 +21,6 @@
 		"type": "git",
 		"url": "https://github.com/pebrianz/markdown-ast.git"
 	},
-	"packageManager": "yarn@4.9.2",
 	"workspaces": ["packages/*"],
 	"devDependencies": {
 		"@types/node": "^24.0.4",
@@ -26,5 +29,12 @@
 		"tsup": "^8.5.0",
 		"typescript": "^5.8.3",
 		"vitest": "^3.2.4"
+	},
+	"type": "module",
+	"exports": {
+		".": {
+			"import": "./build/release.js",
+			"types": "./build/release.d.ts"
+		}
 	}
 }
