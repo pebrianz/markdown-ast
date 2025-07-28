@@ -349,6 +349,81 @@ describe("lexer", async () => {
     expect(tokens).toEqual([firstOrderedList, secondOrderedList])
   })
 
+  it("should tokenize horizontal rule", () => {
+    const src = dedent`
+      ------
+    `
+
+    const tokens = tokenize(src)
+
+    const expectedResult: Token = {
+      kind: TokenKinds.Block,
+      type: TokenTypes.HorizontalRule,
+      value: '------',
+      line: 1,
+      column: 1,
+      spacesLength: 0,
+      children: []
+    }
+    expect(tokens).toEqual([expectedResult])
+  })
+
+  it("should tokenize link", () => {
+    const src = dedent`
+      [markdown-ast](https://github.com/pebrianz/markdown-ast)
+    `
+
+    const tokens = tokenize(src)
+
+    const ecpectedResult: Token = {
+      kind: TokenKinds.Block,
+      type: TokenTypes.Paragraph,
+      value: "",
+      line: 1,
+      column: 1,
+      spacesLength: 0,
+      children: [
+        {
+          kind: TokenKinds.Inline,
+          type: TokenTypes.OpenBracket,
+          value: "[",
+          line: 1,
+          column: 1,
+          spacesLength: 0,
+          children: []
+        },
+        {
+          kind: TokenKinds.Inline,
+          type: TokenTypes.Text,
+          value: "markdown-ast",
+          line: 1,
+          column: 2,
+          spacesLength: 0,
+          children: []
+        },
+        {
+          kind: TokenKinds.Inline,
+          type: TokenTypes.CloseBracket,
+          value: "]",
+          line: 1,
+          column: 14,
+          spacesLength: 0,
+          children: []
+        },
+        {
+          kind: TokenKinds.Inline,
+          type: TokenTypes.LinkURL,
+          value: "(https://github.com/pebrianz/markdown-ast)",
+          line: 1,
+          column: 15,
+          spacesLength: 0,
+          children: []
+        }
+      ]
+    }
+    expect(tokens).toEqual([ecpectedResult])
+  })
+
   it("should tokenize escape character", () => {
     const src = dedent`
       \# \*paragraph\*

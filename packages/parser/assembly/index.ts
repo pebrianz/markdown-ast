@@ -1,6 +1,6 @@
 // The entry file of your WebAssembly module.
 import { Tokenizer } from "./tokenizer"
-import { Node, Parser } from "./parser"
+import { Node, Parser, Document } from "./parser"
 
 import { Token } from "./token"
 
@@ -12,25 +12,11 @@ export function tokenize(src: string): Token[] {
   return tokenizer.tokenize()
 }
 
-export function parse(tokens: Token[]): Node {
+export function parse(tokens: Token[]): Document {
   return new Parser(tokens).parse()
 }
 
-class AddParams {
-  a: u8
-  b: u8
+export function getMapValue(map: Map<string, string>, key: string): string {
+  return map.has(key) ? map.get(key) : ""
 }
-
-export function add(args: AddParams): AddParams {
-
-  if (args.a < args.b) {
-    console.log("a grether than b")
-  }
-
-  return {
-    a: args.a,
-    b: args.b,
-  }
-}
-
 

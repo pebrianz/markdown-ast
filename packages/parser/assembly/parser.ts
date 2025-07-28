@@ -17,13 +17,17 @@ export enum NodeTypes {
   TableCell = 6,
   TableHeader = 7,
   List = 8,
+  ListItem = 9,
+  HorizontalRule = 10,
 
   // Inline node types
   Text = 50,
   Italic = 51,
   Bold = 52,
   BlockItalic = 53,
-  Code = 54
+  Code = 54,
+  Link = 55,
+  Image = 56
 }
 
 export class Node {
@@ -34,8 +38,16 @@ export class Node {
   attrs: string[][]
 }
 
+export class Document {
+  kind: NodeKinds = NodeKinds.Document
+  type: NodeTypes = NodeTypes.Document
+  childNodes: Node[] = []
+  references: Map<string, string> = new Map<string, string>()
+}
+
 export class Parser {
   private currentToken: Token = new Token()
+  private document: Document = new Document()
   constructor(private tokens: Token[]) {
     this.advance()
   }
@@ -47,8 +59,8 @@ export class Parser {
   }
 
   parseInlineCode(): Node {
-    let textContent = ""
     const children = this.currentToken.children
+    let textContent = ""
 
     if (children.length <= 0) return { kind: NodeKinds.Inline, type: NodeTypes.Code, textContent, childNodes: [], attrs: [] }
 
@@ -63,8 +75,8 @@ export class Parser {
   }
 
   parseBlockItalic(type: TokenTypes, markLength: i32): Node {
-    const childNodes: Node[] = []
     const children = this.currentToken.children
+    const childNodes: Node[] = []
 
     if (children.length <= 0) return { kind: NodeKinds.Inline, type: 50 + markLength, textContent: '', childNodes, attrs: [] }
 
@@ -78,18 +90,85 @@ export class Parser {
     return { kind: NodeKinds.Inline, type: 50 + markLength, textContent: '', childNodes, attrs: [] }
   }
 
+  private parseLink(): Node {
+    const children = this.currentToken.children
+    const childNodes: Node[] = []
+    const attrs: string[][] = []
+
+    if (children.length <= 0) return { kind: NodeKinds.Inline, type: NodeTypes.Link, textContent: '', attrs: [], childNodes }
+
+    let currentToken: Token = children.shift()
+    while (currentToken.type !== TokenTypes.CloseBracket) {
+      childNodes.push(this.parseInline(currentToken))
+      if (children.length <= 0) break
+      currentToken = children.shift()
+    }
+
+    if (children.length > 0 && children[0].type === TokenTypes.LinkURL) {
+      const url = children[0].value.slice(1, -1).split('"', 2)
+      const arr: string[] = []
+      arr[0] = url[0].trim()
+      if (url.length > 1) arr[1] = url[1]
+      attrs[0] = arr
+      children.shift()
+    }
+
+    return { kind: NodeKinds.Inline, type: NodeTypes.Link, textContent: '', attrs, childNodes }
+  }
+
+  private parseImage(): Node {
+    const children = this.currentToken.children
+    const childNodes: Node[] = []
+    const attrs: string[][] = []
+
+    if (children.length <= 0) return { kind: NodeKinds.Inline, type: NodeTypes.Link, textContent: '', attrs: [], childNodes }
+
+    let currentToken: Token = children.shift()
+    while (currentToken.type !== TokenTypes.CloseBracket) {
+      childNodes.push(this.parseInline(currentToken))
+      if (children.length <= 0) break
+      currentToken = children.shift()
+    }
+
+    if (children.length > 0 && children[0].type === TokenTypes.LinkURL) {
+      const url = children[0].value.slice(1, -1).split('"', 2)
+      const arr: string[] = []
+      arr[0] = url[0].trim()
+      if (url.length > 1) arr[1] = url[1]
+      attrs[0] = arr
+      children.shift()
+    }
+
+    return { kind: NodeKinds.Inline, type: NodeTypes.Image, textContent: '', attrs, childNodes }
+  }
+  private parseText(value: string): Node {
+    return { kind: NodeKinds.Inline, type: NodeTypes.Text, textContent: value, childNodes: [], attrs: [] }
+  }
+
   private parseInline(currentInlineToken: Token): Node {
     switch (currentInlineToken.type) {
       case TokenTypes.Text:
-        return { kind: NodeKinds.Inline, type: NodeTypes.Text, textContent: currentInlineToken.value, childNodes: [], attrs: [] }
+        return this.parseText(currentInlineToken.value)
       case TokenTypes.Asterisk:
         return this.parseBlockItalic(currentInlineToken.type, currentInlineToken.value.length)
       case TokenTypes.Underscore:
         return this.parseBlockItalic(currentInlineToken.type, currentInlineToken.value.length)
       case TokenTypes.Backtick:
         return this.parseInlineCode()
+      case TokenTypes.OpenBracket:
+        return this.parseLink()
+      case TokenTypes.CloseBracket:
+        return this.parseText(currentInlineToken.value)
+      case TokenTypes.LinkURL:
+        return this.parseText(currentInlineToken.value)
+      case TokenTypes.Bang:
+        if (this.currentToken.children.length <= 0 || this.currentToken.children[0].type !== TokenTypes.OpenBracket) {
+          return this.parseText(currentInlineToken.value)
+        }
+        this.currentToken.children.shift()
+        return this.parseImage()
       case TokenTypes.Pipe:
-        return { kind: NodeKinds.Inline, type: NodeTypes.Text, textContent: currentInlineToken.value, childNodes: [], attrs: [] }
+        return this.parseText(currentInlineToken.value)
     }
 
     throw new Error()
@@ -124,6 +203,55 @@ export class Parser {
       textContent: '',
       childNodes,
       attrs: []
+    }
+  }
+
+  private parseListItems(): Node[] {
+    const listItems: Node[] = []
+    const currentListType = this.currentToken.type
+
+    while (true) {
+      const childNodes = this.parseChildren(this.currentToken.children)
+
+      listItems.push({
+        kind: NodeKinds.Block,
+        type: NodeTypes.ListItem,
+        textContent: '',
+        attrs: [],
+        childNodes
+      })
+
+      if (this.tokens.length <= 0) break
+
+      let nextToken = this.tokens[0]
+      if (nextToken.type === TokenTypes.OrderedList || nextToken.type === TokenTypes.UnorderedList) {
+        // handle nested list
+        if (nextToken.spacesLength / 2 > this.currentToken.spacesLength / 2) {
+          this.advance()
+          listItems.push(this.parseBlock())
+
+          if (this.tokens.length <= 0) break
+          nextToken = this.tokens[0]
+        }
+      }
+
+      if (nextToken.type !== currentListType) break
+      this.advance()
+    }
+
+    return listItems
+  }
+
+  private parseList(): Node {
+    const isOrdered = this.currentToken.type === TokenTypes.OrderedList
+    const startFrom = u8.parse(this.currentToken.value[0]).toString()
+
+    return {
+      kind: NodeKinds.Block,
+      type: NodeTypes.List,
+      textContent: '',
+      attrs: [[isOrdered ? "ordered" : "unordered", startFrom]],
+      childNodes: this.parseListItems()
     }
   }
 
@@ -193,32 +321,33 @@ export class Parser {
   private parseTable(): Node {
     const align: string[] = []
 
-    if (this.tokens.length > 0 && this.tokens[0].type === TokenTypes.TableRow) {
-      if (this.tokens[0].children.length > 0) {
-        let currentToken = this.tokens[0].children.shift()
-        while (currentToken) {
-          if (currentToken.type === TokenTypes.Text) {
-            const firstchar = currentToken.value[0]
-            const lastchar = currentToken.value.at(-1)
-            const firstlastchar = firstchar + lastchar
+    if (this.tokens.length > 0 && this.tokens[0].type === TokenTypes.TableRow && this.tokens[0].children.length > 0) {
+      let currentToken = this.tokens[0].children.shift()
 
-            if (firstchar === "-" || firstchar === ":") {
-              let bool = true
-              let i = 1
-              while (i < currentToken.value.length - 1) {
-                if (currentToken.value[i] !== "-") bool = false
-                i++
-              }
-              if (bool) {
-                if (firstlastchar === "::") align.push("center")
-                else if (firstlastchar === "-:") align.push("right")
-                else if (lastchar === "-") align.push("left")
-              }
+      while (true) {
+        if (currentToken.type === TokenTypes.Text) {
+          const firstchar = currentToken.value[0]
+          const lastchar = currentToken.value.at(-1)
+          const firstlastchar = firstchar + lastchar
+
+          if (firstchar === "-" || firstchar === ":") {
+            let bool = true
+            let i = 1
+            while (i < currentToken.value.length - 1) {
+              if (currentToken.value[i] !== "-") bool = false
+              i++
+            }
+
+            if (bool) {
+              if (firstlastchar === "::") align.push("center")
+              else if (firstlastchar === "-:") align.push("right")
+              else if (lastchar === "-") align.push("left")
             }
           }
-          if (this.tokens[0].children.length <= 0) break
-          currentToken = this.tokens[0].children.shift()
         }
+
+        if (this.tokens[0].children.length <= 0) break
+        currentToken = this.tokens[0].children.shift()
       }
     }
 
@@ -235,6 +364,7 @@ export class Parser {
       attrs: []
     }
     this.advance()
+
     return {
       kind: NodeKinds.Block,
       type: NodeTypes.Table,
@@ -248,6 +378,15 @@ export class Parser {
     switch (this.currentToken.type) {
       case TokenTypes.TableRow: {
         return this.parseTable()
+      }
+      case TokenTypes.UnorderedList: {
+        return this.parseList()
+      }
+      case TokenTypes.OrderedList: {
+        return this.parseList()
+      }
+      case TokenTypes.HorizontalRule: {
+        return { kind: NodeKinds.Block, type: NodeTypes.HorizontalRule, textContent: '', attrs: [], childNodes: [] }
       }
 
       default: {
@@ -267,19 +406,19 @@ export class Parser {
     throw new Error("")
   }
 
-  private parseDocument(): Node {
-    const childNodes: Node[] = []
-
+  parse(): Document {
     while (this.currentToken.kind === TokenKinds.Block) {
-      childNodes.push(this.parseBlock())
+      if (this.currentToken.type === TokenTypes.Blankline) {
+        if (this.tokens.length <= 0) break
+        this.advance()
+      }
+
+      this.document.childNodes.push(this.parseBlock())
+
       if (this.tokens.length <= 0) break
       this.advance()
     }
 
-    return { kind: NodeKinds.Document, type: NodeTypes.Document, textContent: '', childNodes, attrs: [] }
-  }
-
-  parse(): Node {
-    return this.parseDocument()
+    return this.document
   }
 }

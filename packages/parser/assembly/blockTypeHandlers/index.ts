@@ -19,10 +19,7 @@ blockTypeHandlers.set("#", (text, line, column, spacesLength) => {
     kind: TokenKinds.Block,
     type: TokenTypes.Heading,
     value: mark,
-    line,
-    column,
-    spacesLength,
-    children: []
+    line, column, spacesLength, children: []
   }
 })
 
@@ -43,10 +40,7 @@ blockTypeHandlers.set(">", (text, line, column, spaceLength) => {
     kind: TokenKinds.Block,
     type: TokenTypes.Blockquotes,
     value: mark,
-    line,
-    column,
-    spacesLength: 0,
-    children: []
+    line, column, spacesLength: 0, children: []
   }
 })
 
@@ -57,24 +51,38 @@ blockTypeHandlers.set("|", (text, line, column, spacesLength) => {
     kind: TokenKinds.Block,
     type: TokenTypes.TableRow,
     value: "",
-    line,
-    column,
-    spacesLength,
-    children: []
+    line, column, spacesLength, children: []
   }
 })
 
 blockTypeHandlers.set("-", (text, line, column, spacesLength) => {
+  let mark = text[0]
+  let i = 1
+  let isHorizontalRule = true
+  while (i < text.length) {
+    if (text[i] !== "-") {
+      isHorizontalRule = false
+      break
+    }
+
+    mark += text[i]
+    i++
+  }
+
+  if (isHorizontalRule && mark.length >= 3) return {
+    kind: TokenKinds.Block,
+    type: TokenTypes.HorizontalRule,
+    value: mark,
+    line, column, spacesLength, children: []
+  }
+
   if (text[1] !== " ") return new Token()
 
   return {
     kind: TokenKinds.Block,
     type: TokenTypes.UnorderedList,
     value: text[0] + text[1],
-    line,
-    column,
-    spacesLength,
-    children: []
+    line, column, spacesLength, children: []
   }
 })
 
@@ -92,9 +100,6 @@ blockTypeHandlers.set("number", (text, line, column, spacesLength) => {
     kind: TokenKinds.Block,
     type: TokenTypes.OrderedList,
     value: mark,
-    line,
-    column,
-    spacesLength,
-    children: []
+    line, column, spacesLength, children: []
   }
 })

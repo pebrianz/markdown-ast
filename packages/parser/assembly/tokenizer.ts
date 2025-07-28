@@ -127,7 +127,7 @@ export class Tokenizer {
   tokenize(): Token[] {
     let tokens: Token[] = []
 
-    while (isString(this.currentLine)) {
+    while (true) {
       tokens = tokens.concat(this.tokenizeBlock(this.currentLine))
       if (this.lines.length <= 0) break
       this.advance()

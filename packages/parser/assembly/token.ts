@@ -13,6 +13,7 @@ export enum TokenTypes {
   TableRow = 4,
   OrderedList = 5,
   UnorderedList = 6,
+  HorizontalRule = 7,
 
   // Inline token types
   Text = 50,
@@ -21,6 +22,10 @@ export enum TokenTypes {
   Pipe = 53,
   Underscore = 54,
   Backtick = 55,
+  Bang = 56,
+  OpenBracket = 57,
+  CloseBracket = 58,
+  LinkURL = 59,
 
   Undefined = 500
 }

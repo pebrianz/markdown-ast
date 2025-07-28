@@ -16,10 +16,7 @@ inlineTypeHandlers.set("*", (text, line, column, spacesLength) => {
     kind: TokenKinds.Inline,
     type: TokenTypes.Asterisk,
     value: mark,
-    line,
-    column,
-    spacesLength,
-    children: []
+    line, column, spacesLength, children: []
   }
 })
 
@@ -37,10 +34,7 @@ inlineTypeHandlers.set("_", (text, line, column, spacesLength) => {
     kind: TokenKinds.Inline,
     type: TokenTypes.Underscore,
     value: mark,
-    line,
-    column,
-    spacesLength,
-    children: []
+    line, column, spacesLength, children: []
   }
 })
 
@@ -49,10 +43,7 @@ inlineTypeHandlers.set("`", (text, line, column, spacesLength) => {
     kind: TokenKinds.Inline,
     type: TokenTypes.Backtick,
     value: text[0],
-    line,
-    column,
-    spacesLength,
-    children: []
+    line, column, spacesLength, children: []
   }
 })
 
@@ -61,10 +52,52 @@ inlineTypeHandlers.set("|", (text, line, column, spacesLength) => {
     kind: TokenKinds.Inline,
     type: TokenTypes.Pipe,
     value: text[0],
-    line,
-    column,
-    spacesLength,
-    children: []
+    line, column, spacesLength, children: []
+  }
+})
+
+inlineTypeHandlers.set("!", (text, line, column, spacesLength) => {
+  return {
+    kind: TokenKinds.Inline,
+    type: TokenTypes.Bang,
+    value: text[0],
+    line, column, spacesLength, children: []
+  }
+})
+
+inlineTypeHandlers.set("[", (text, line, column, spacesLength) => {
+  return {
+    kind: TokenKinds.Inline,
+    type: TokenTypes.OpenBracket,
+    value: text[0],
+    line, column, spacesLength, children: []
+  }
+})
+
+inlineTypeHandlers.set("]", (text, line, column, spacesLength) => {
+  return {
+    kind: TokenKinds.Inline,
+    type: TokenTypes.CloseBracket,
+    value: text[0],
+    line, column, spacesLength, children: []
+  }
+})
+
+inlineTypeHandlers.set("(", (text, line, column, spacesLength) => {
+  let value = text[0]
+
+  let i = 1
+  while (i < text.length) {
+    value += text[i]
+    if (text[i++] === ")") break
+  }
+
+  if (value[i - 1] !== ')') return new Token()
+
+  return {
+    kind: TokenKinds.Inline,
+    type: TokenTypes.LinkURL,
+    value, line, column, spacesLength, children: []
   }
 })
 
