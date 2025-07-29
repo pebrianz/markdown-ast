@@ -20,12 +20,12 @@ export enum TokenTypes {
   Asterisk = 51,
   Code = 52,
   Pipe = 53,
-  Underscore = 54,
   Backtick = 55,
   Bang = 56,
   OpenBracket = 57,
   CloseBracket = 58,
   LinkURL = 59,
+  CustomID = 60,
 
   Undefined = 500
 }

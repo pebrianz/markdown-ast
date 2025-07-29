@@ -1,4 +1,4 @@
-import { Token, TokenKinds, TokenTypes } from "./token"
+import { Token, TokenKinds, TokenTypes } from "./tokenizer/token"
 
 export enum NodeKinds {
   Document = 0,
@@ -27,7 +27,7 @@ export enum NodeTypes {
   BlockItalic = 53,
   Code = 54,
   Link = 55,
-  Image = 56
+  Image = 56,
 }
 
 export class Node {
@@ -151,8 +151,6 @@ export class Parser {
         return this.parseText(currentInlineToken.value)
       case TokenTypes.Asterisk:
         return this.parseBlockItalic(currentInlineToken.type, currentInlineToken.value.length)
-      case TokenTypes.Underscore:
-        return this.parseBlockItalic(currentInlineToken.type, currentInlineToken.value.length)
       case TokenTypes.Backtick:
         return this.parseInlineCode()
       case TokenTypes.OpenBracket:
@@ -161,14 +159,16 @@ export class Parser {
         return this.parseText(currentInlineToken.value)
       case TokenTypes.LinkURL:
         return this.parseText(currentInlineToken.value)
+      case TokenTypes.Pipe:
+        return this.parseText(currentInlineToken.value)
+      case TokenTypes.CustomID:
+        return this.parseText(currentInlineToken.value)
       case TokenTypes.Bang:
         if (this.currentToken.children.length <= 0 || this.currentToken.children[0].type !== TokenTypes.OpenBracket) {
           return this.parseText(currentInlineToken.value)
         }
         this.currentToken.children.shift()
         return this.parseImage()
-      case TokenTypes.Pipe:
-        return this.parseText(currentInlineToken.value)
     }
 
     throw new Error()
@@ -187,6 +187,28 @@ export class Parser {
 
     return childNodes
   }
+
+  private parseHeading(): Node {
+    const children: Token[] = this.currentToken.children
+    const childNodes: Node[] = []
+    const attrs: string[][] = []
+
+    if (children.length <= 0) return { kind: NodeKinds.Block, type: NodeTypes.Heading, textContent: "", childNodes, attrs }
+
+    let currentToken: Token = children.shift()
+    while (currentToken.kind === TokenKinds.Inline) {
+      if (currentToken.type === TokenTypes.CustomID && children.length <= 0) {
+        attrs.push([currentToken.value.slice(1, -1)])
+        break
+      }
+      childNodes.push(this.parseInline(currentToken))
+      if (children.length <= 0) break
+      currentToken = children.shift()
+    }
+
+    return { kind: NodeKinds.Block, type: NodeTypes.Heading, textContent: "", childNodes, attrs }
+  }
+
 
   private parseBlockquotes(childNodes: Node[]): Node {
     if (this.tokens.length > 0 && this.tokens[0].type === TokenTypes.Blockquotes) {
@@ -388,6 +410,9 @@ export class Parser {
       case TokenTypes.HorizontalRule: {
         return { kind: NodeKinds.Block, type: NodeTypes.HorizontalRule, textContent: '', attrs: [], childNodes: [] }
       }
+      case TokenTypes.Heading: {
+        return this.parseHeading()
+      }
 
       default: {
         const childNodes: Node[] = this.parseChildren(this.currentToken.children)
@@ -395,8 +420,6 @@ export class Parser {
         switch (this.currentToken.type) {
           case TokenTypes.Paragraph:
             return { kind: NodeKinds.Block, type: NodeTypes.Paragraph, textContent: '', childNodes, attrs: [] }
-          case TokenTypes.Heading:
-            return { kind: NodeKinds.Block, type: NodeTypes.Heading, textContent: '', childNodes, attrs: [] }
           case TokenTypes.Blockquotes:
             return this.parseBlockquotes(childNodes)
         }

@@ -75,38 +75,23 @@ export class Tokenizer {
     return tokens
   }
 
-  private tokenizeBlock(line: string): Token[] {
+  private tokenizeBlock(line: string): Token {
     const trimed: string = line.trimStart()
     const spacesLength: i32 = line.slice(1, -trimed.length).length
 
-    const tokens: Token[] = []
     let column: i32 = spacesLength + 1
 
-    if (trimed.length < 1) {
-      tokens.push({
-        kind: TokenKinds.Block,
-        type: TokenTypes.Blankline,
-        value: trimed,
-        line: this.currentLineNumber,
-        column,
-        spacesLength,
-        children: []
-      })
-
-      return tokens
+    if (trimed.length < 1) return {
+      kind: TokenKinds.Block,
+      type: TokenTypes.Blankline,
+      value: trimed,
+      line: this.currentLineNumber,
+      column,
+      spacesLength,
+      children: []
     }
 
-    let blockToken: Token = new Token()
-
-    const key = u8.parse(trimed[0]) === 0 ? trimed[0] : "number"
-    if (blockTypeHandlers.has(key)) {
-      const handler = blockTypeHandlers.get(key)
-      const token = handler(trimed, this.currentLineNumber, column, spacesLength)
-
-      if (token.kind !== TokenKinds.Undefined) blockToken = token
-    }
-
-    if (blockToken.kind === TokenKinds.Undefined) blockToken = {
+    let token: Token = {
       kind: TokenKinds.Block,
       type: TokenTypes.Paragraph,
       value: '',
@@ -116,19 +101,29 @@ export class Tokenizer {
       children: []
     }
 
-    tokens.push(blockToken)
+    const key = u8.parse(trimed[0]) === 0 ? trimed[0] : "number"
+    if (blockTypeHandlers.has(key)) {
+      const handler = blockTypeHandlers.get(key)
+      const blockToken = handler(trimed, this.currentLineNumber, column, spacesLength)
 
-    column = blockToken.spacesLength + blockToken.value.length + 1
-    blockToken.children = this.tokenizeInline(trimed.slice(blockToken.value.length), column)
+      if (blockToken.kind !== TokenKinds.Undefined) token = blockToken
+    }
 
-    return tokens
+    column = token.spacesLength + token.value.length + 1
+    // if (token.type === TokenTypes.Blockquotes) {
+    //   token.children.push(this.tokenizeBlock(trimed.slice(token.value.length)))
+    //   return token
+    // }
+    token.children = this.tokenizeInline(trimed.slice(token.value.length), column)
+
+    return token
   }
 
   tokenize(): Token[] {
-    let tokens: Token[] = []
+    const tokens: Token[] = []
 
     while (true) {
-      tokens = tokens.concat(this.tokenizeBlock(this.currentLine))
+      tokens.push(this.tokenizeBlock(this.currentLine))
       if (this.lines.length <= 0) break
       this.advance()
     }

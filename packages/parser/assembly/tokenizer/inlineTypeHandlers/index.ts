@@ -20,24 +20,6 @@ inlineTypeHandlers.set("*", (text, line, column, spacesLength) => {
   }
 })
 
-inlineTypeHandlers.set("_", (text, line, column, spacesLength) => {
-  let mark: string = text[0]
-  let i = 1
-  while (text[i] === "_") {
-    mark += text[i]
-    i++
-  }
-
-  if (mark.length > 3) return new Token()
-
-  return {
-    kind: TokenKinds.Inline,
-    type: TokenTypes.Underscore,
-    value: mark,
-    line, column, spacesLength, children: []
-  }
-})
-
 inlineTypeHandlers.set("`", (text, line, column, spacesLength) => {
   return {
     kind: TokenKinds.Inline,
@@ -97,6 +79,28 @@ inlineTypeHandlers.set("(", (text, line, column, spacesLength) => {
   return {
     kind: TokenKinds.Inline,
     type: TokenTypes.LinkURL,
+    value, line, column, spacesLength, children: []
+  }
+})
+
+inlineTypeHandlers.set("{", (text, line, column, spacesLength) => {
+  let value = text[0]
+
+  if (text.length < 4 || text[1] !== "#" || text[2] === "}") return new Token()
+
+  value += text[1] + text[2]
+
+  let i = 3
+  while (i < text.length) {
+    value += text[i]
+    if (text[i++] === "}") break
+  }
+
+  if (value[i - 1] !== "}") return new Token()
+
+  return {
+    kind: TokenKinds.Inline,
+    type: TokenTypes.CustomID,
     value, line, column, spacesLength, children: []
   }
 })

@@ -1,10 +1,10 @@
 // The entry file of your WebAssembly module.
-import { Tokenizer } from "./tokenizer"
+import { Tokenizer } from "./tokenizer/tokenizer"
 import { Node, Parser, Document } from "./parser"
 
-import { Token } from "./token"
+import { Token } from "./tokenizer/token"
 
-export { TokenKinds, TokenTypes } from "./token"
+export { TokenKinds, TokenTypes } from "./tokenizer/token"
 export { NodeKinds, NodeTypes } from "./parser"
 
 export function tokenize(src: string): Token[] {

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest"
 import dedent from "dedent"
 
 import { tokenize, TokenKinds, TokenTypes } from "../build/debug.js"
-import type { Token } from "../assembly/token"
+import type { Token } from "../assembly/tokenizer/token"
 
 describe("lexer", async () => {
   it("should tokenize heading, paragraph and text", () => {
@@ -55,10 +55,25 @@ describe("lexer", async () => {
     expect(tokens).toEqual(expectedResult)
   })
 
+  it("should tokenize custom id", () => {
+    const src = "# heading {#custom-id}"
+
+    const tokens = tokenize(src)
+
+    const expectedResult: Token = {
+      kind: TokenKinds.Inline,
+      type: TokenTypes.CustomID,
+      value: "{#custom-id}",
+      line: 1,
+      column: 11,
+      spacesLength: 0,
+      children: []
+    }
+    expect(tokens[0].children).toContainEqual(expectedResult)
+  })
+
   it("should tokenize blockquotes", () => {
-    const src = dedent`
-      > this is blockquotes
-    `
+    const src = "> this is blockquotes"
 
     const tokens = tokenize(src)
 
@@ -122,44 +137,6 @@ describe("lexer", async () => {
     expect([mark1, text2, mark2]).toEqual(expectedResult)
   })
 
-  it.each([
-    ["single underscore", "_"],
-    ["double underscore", "__"],
-    ["triple underscore", "___"]
-  ])("should tokenize %s `%s`", (name, mark) => {
-    const src = `should tokenize ${mark + name + mark}`
-
-    const tokens = tokenize(src)
-    const [text, mark1, text2, mark2] = tokens[0].children
-
-    const expectedMark: Token = {
-      kind: TokenKinds.Inline,
-      type: TokenTypes.Underscore,
-      value: mark,
-      line: 1,
-      column: text.column + text.value.length,
-      spacesLength: 0,
-      children: []
-    }
-
-    const expectedText: Token = {
-      kind: TokenKinds.Inline,
-      type: TokenTypes.Text,
-      value: name,
-      line: 1,
-      column: expectedMark.column + expectedMark.value.length,
-      spacesLength: 0,
-      children: []
-    }
-
-    const expectedResult: Token[] = [
-      expectedMark,
-      expectedText,
-      { ...expectedMark, column: expectedText.column + expectedText.value.length }
-    ]
-    expect([mark1, text2, mark2]).toEqual(expectedResult)
-  })
-
   it("should tokenize backtick", () => {
     const src = "this is `backtick`"
 
@@ -193,9 +170,7 @@ describe("lexer", async () => {
   })
 
   it("should tokenize table row and pipe", () => {
-    const src = dedent`
-      |----|----|
-    `
+    const src = "|----|----|"
 
     const tokens = tokenize(src)
     const markPipe = "|"
@@ -350,9 +325,7 @@ describe("lexer", async () => {
   })
 
   it("should tokenize horizontal rule", () => {
-    const src = dedent`
-      ------
-    `
+    const src = "------"
 
     const tokens = tokenize(src)
 
@@ -369,9 +342,7 @@ describe("lexer", async () => {
   })
 
   it("should tokenize link", () => {
-    const src = dedent`
-      [markdown-ast](https://github.com/pebrianz/markdown-ast)
-    `
+    const src = "[markdown-ast](https://github.com/pebrianz/markdown-ast)"
 
     const tokens = tokenize(src)
 
@@ -425,9 +396,7 @@ describe("lexer", async () => {
   })
 
   it("should tokenize escape character", () => {
-    const src = dedent`
-      \# \*paragraph\*
-    `
+    const src = dedent`\# \*paragraph\*`
 
     const tokens = tokenize(src)
 
