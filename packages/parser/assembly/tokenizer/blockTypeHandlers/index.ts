@@ -24,17 +24,11 @@ blockTypeHandlers.set("#", (text, line, column, spacesLength) => {
 })
 
 blockTypeHandlers.set(">", (text, line, column, spaceLength) => {
-  let mark = ""
-  let i = 0
+  let mark = text[0]
 
-  while (text[i] === ">") {
-    mark += text[i]
-    i++
-  }
+  if (text.length >= 2 && text[1] !== " ") return new Token()
 
-  if (mark.length > 50 || text[i] !== " ") return new Token()
-
-  mark += text[i]
+  mark += text[1]
 
   return {
     kind: TokenKinds.Block,

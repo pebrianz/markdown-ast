@@ -75,11 +75,11 @@ export class Tokenizer {
     return tokens
   }
 
-  private tokenizeBlock(line: string): Token {
+  private tokenizeBlock(line: string, _column: i32 = 0): Token {
     const trimed: string = line.trimStart()
     const spacesLength: i32 = line.slice(1, -trimed.length).length
 
-    let column: i32 = spacesLength + 1
+    let column: i32 = spacesLength + 1 + _column
 
     if (trimed.length < 1) return {
       kind: TokenKinds.Block,
@@ -109,11 +109,13 @@ export class Tokenizer {
       if (blockToken.kind !== TokenKinds.Undefined) token = blockToken
     }
 
-    column = token.spacesLength + token.value.length + 1
-    // if (token.type === TokenTypes.Blockquotes) {
-    //   token.children.push(this.tokenizeBlock(trimed.slice(token.value.length)))
-    //   return token
-    // }
+    column = token.spacesLength + token.value.length + 1 + _column
+
+    if (token.type === TokenTypes.Blockquotes) {
+      token.children.push(this.tokenizeBlock(trimed.slice(token.value.length), column - 1))
+      return token
+    }
+
     token.children = this.tokenizeInline(trimed.slice(token.value.length), column)
 
     return token

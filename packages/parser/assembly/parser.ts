@@ -48,9 +48,7 @@ export class Document {
 export class Parser {
   private currentToken: Token = new Token()
   private document: Document = new Document()
-  constructor(private tokens: Token[]) {
-    this.advance()
-  }
+  constructor(private tokens: Token[]) { }
 
   private advance(): void {
     if (this.tokens.length > 0) {
@@ -176,6 +174,7 @@ export class Parser {
 
   private parseChildren(children: Token[]): Node[] {
     const childNodes: Node[] = []
+
     if (children.length <= 0) return childNodes
 
     let currentToken: Token = children.shift()
@@ -210,13 +209,26 @@ export class Parser {
   }
 
 
-  private parseBlockquotes(childNodes: Node[]): Node {
-    if (this.tokens.length > 0 && this.tokens[0].type === TokenTypes.Blockquotes) {
-      // handle nested blockquotes
-      if (this.tokens[0].value.length - 1 === this.currentToken.value.length) {
+  private parseBlockquotes(): Node {
+    // if (this.tokens.length > 0 && this.tokens[0].type === TokenTypes.Blockquotes) {
+    //   // handle nested blockquotes
+    //   if (this.tokens[0].value.length - 1 === this.currentToken.value.length) {
+    //     this.advance()
+    //     childNodes.push(this.parseBlock())
+    //   }
+    // }
+    const childNodes: Node[] = []
+
+    while (true) {
+      this.currentToken = this.currentToken.children[0]
+      if (this.currentToken.type === TokenTypes.Blankline) {
+        if (this.tokens.length <= 0) break
         this.advance()
-        childNodes.push(this.parseBlock())
+        continue
       }
+      childNodes.push(this.parseBlock())
+      if (this.tokens.length <= 0 || this.tokens[0].type !== TokenTypes.Blockquotes) break
+      this.advance()
     }
 
     return {
@@ -398,8 +410,13 @@ export class Parser {
 
   private parseBlock(): Node {
     switch (this.currentToken.type) {
-      case TokenTypes.TableRow: {
-        return this.parseTable()
+      case TokenTypes.Heading: {
+        return this.parseHeading()
+      }
+      case TokenTypes.Blockquotes:
+        return this.parseBlockquotes()
+      case TokenTypes.HorizontalRule: {
+        return { kind: NodeKinds.Block, type: NodeTypes.HorizontalRule, textContent: '', attrs: [], childNodes: [] }
       }
       case TokenTypes.UnorderedList: {
         return this.parseList()
@@ -407,11 +424,8 @@ export class Parser {
       case TokenTypes.OrderedList: {
         return this.parseList()
       }
-      case TokenTypes.HorizontalRule: {
-        return { kind: NodeKinds.Block, type: NodeTypes.HorizontalRule, textContent: '', attrs: [], childNodes: [] }
-      }
-      case TokenTypes.Heading: {
-        return this.parseHeading()
+      case TokenTypes.TableRow: {
+        return this.parseTable()
       }
 
       default: {
@@ -420,8 +434,6 @@ export class Parser {
         switch (this.currentToken.type) {
           case TokenTypes.Paragraph:
             return { kind: NodeKinds.Block, type: NodeTypes.Paragraph, textContent: '', childNodes, attrs: [] }
-          case TokenTypes.Blockquotes:
-            return this.parseBlockquotes(childNodes)
         }
       }
     }
@@ -430,17 +442,14 @@ export class Parser {
   }
 
   parse(): Document {
-    while (this.currentToken.kind === TokenKinds.Block) {
+    do {
+      this.advance()
       if (this.currentToken.type === TokenTypes.Blankline) {
         if (this.tokens.length <= 0) break
         this.advance()
       }
-
       this.document.childNodes.push(this.parseBlock())
-
-      if (this.tokens.length <= 0) break
-      this.advance()
-    }
+    } while (this.tokens.length > 0)
 
     return this.document
   }

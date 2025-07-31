@@ -73,31 +73,59 @@ describe("lexer", async () => {
   })
 
   it("should tokenize blockquotes", () => {
-    const src = "> this is blockquotes"
+    const src = dedent`
+      > this is blockquotes
+      >
+    `
 
     const tokens = tokenize(src)
 
-    const expectedBlockquotes: Token = {
+    const firstBlockquotes: Token = {
       kind: TokenKinds.Block,
       type: TokenTypes.Blockquotes,
       value: "> ",
       line: 1,
       column: 1,
       spacesLength: 0,
-      children: [
-        {
-          kind: TokenKinds.Inline,
-          type: TokenTypes.Text,
-          value: "this is blockquotes",
-          line: 1,
-          column: 3,
-          spacesLength: 0,
-          children: []
-        }
-      ]
+      children: [{
+        kind: TokenKinds.Block,
+        type: TokenTypes.Paragraph,
+        value: '',
+        line: 1,
+        column: 3,
+        spacesLength: 0,
+        children: [
+          {
+            kind: TokenKinds.Inline,
+            type: TokenTypes.Text,
+            value: "this is blockquotes",
+            line: 1,
+            column: 3,
+            spacesLength: 0,
+            children: []
+          }
+        ]
+      }]
+    }
+    const secondBlockquotes: Token = {
+      kind: TokenKinds.Block,
+      type: TokenTypes.Blockquotes,
+      value: ">",
+      line: 2,
+      column: 1,
+      spacesLength: 0,
+      children: [{
+        kind: TokenKinds.Block,
+        type: TokenTypes.Blankline,
+        value: '',
+        line: 2,
+        column: 2,
+        spacesLength: 0,
+        children: []
+      }]
     }
 
-    expect(tokens).toEqual([expectedBlockquotes])
+    expect(tokens).toEqual([firstBlockquotes, secondBlockquotes])
   })
 
 
