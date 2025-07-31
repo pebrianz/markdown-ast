@@ -42,6 +42,7 @@ describe("blockquotes", async () => {
 
     const tokens = tokenize(src)
     const ast = parse(tokens)
+    console.dir(ast.childNodes, { depth: null })
 
     const textNode: Node = {
       kind: NodeKinds.Inline,
@@ -115,6 +116,62 @@ describe("blockquotes", async () => {
             }]
           }]
         }
+      ]
+    }
+    expect(ast.childNodes).toEqual([expectedBlockquotes])
+  })
+
+  it("should parse list in blockquotes", () => {
+    const src = dedent`
+      > - first item
+      > - second item
+    `
+
+    const tokens = tokenize(src)
+    console.dir(tokens, { depth: null })
+    const ast = parse(tokens)
+    console.dir(ast.childNodes, { depth: null })
+
+    const expectedBlockquotes: Node = {
+      kind: NodeKinds.Block,
+      type: NodeTypes.Blockquotes,
+      textContent: "",
+      attrs: [],
+      childNodes: [
+        {
+          kind: NodeKinds.Block,
+          type: NodeTypes.List,
+          textContent: '',
+          attrs: [["unordered", "0"]],
+          childNodes: [
+            {
+              kind: NodeKinds.Block,
+              type: NodeTypes.ListItem,
+              textContent: "",
+              attrs: [],
+              childNodes: [{
+                kind: NodeKinds.Inline,
+                type: NodeTypes.Text,
+                textContent: "first item",
+                childNodes: [],
+                attrs: []
+              }],
+            },
+            {
+              kind: NodeKinds.Block,
+              type: NodeTypes.ListItem,
+              textContent: "",
+              attrs: [],
+              childNodes: [{
+                kind: NodeKinds.Inline,
+                type: NodeTypes.Text,
+                textContent: "second item",
+                childNodes: [],
+                attrs: []
+              }],
+            }
+          ]
+        },
       ]
     }
     expect(ast.childNodes).toEqual([expectedBlockquotes])

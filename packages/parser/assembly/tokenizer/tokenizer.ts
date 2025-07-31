@@ -113,6 +113,18 @@ export class Tokenizer {
 
     if (token.type === TokenTypes.Blockquotes) {
       token.children.push(this.tokenizeBlock(trimed.slice(token.value.length), column - 1))
+
+      if (this.lines.length <= 0) return token
+      let key: string = this.lines[0].trimStart()[0]
+
+      while (key === '>') {
+        this.advance()
+        token.children = token.children.concat(this.tokenizeBlock(this.currentLine).children)
+
+        if (this.lines.length <= 0) break
+        key = this.lines[0].trimStart()[0]
+      }
+
       return token
     }
 

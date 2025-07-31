@@ -48,11 +48,13 @@ export class Document {
 export class Parser {
   private currentToken: Token = new Token()
   private document: Document = new Document()
+  private currentTokens: Token[] = []
   constructor(private tokens: Token[]) { }
 
   private advance(): void {
     if (this.tokens.length > 0) {
-      this.currentToken = this.tokens.shift()
+      this.currentTokens = this.tokens
+      this.currentToken = this.currentTokens.shift()
     }
   }
 
@@ -219,16 +221,15 @@ export class Parser {
     // }
     const childNodes: Node[] = []
 
+    let currentToken: Token = this.currentToken
     while (true) {
-      this.currentToken = this.currentToken.children[0]
-      if (this.currentToken.type === TokenTypes.Blankline) {
-        if (this.tokens.length <= 0) break
-        this.advance()
-        continue
-      }
+      this.currentTokens = currentToken.children
+      if (this.currentTokens.length <= 0) break
+      this.currentToken = this.currentTokens.shift()
+
+      if (this.currentToken.type === TokenTypes.Blankline) continue
+
       childNodes.push(this.parseBlock())
-      if (this.tokens.length <= 0 || this.tokens[0].type !== TokenTypes.Blockquotes) break
-      this.advance()
     }
 
     return {
@@ -255,22 +256,22 @@ export class Parser {
         childNodes
       })
 
-      if (this.tokens.length <= 0) break
+      if (this.currentTokens.length <= 0) break
 
-      let nextToken = this.tokens[0]
+      let nextToken = this.currentTokens[0]
       if (nextToken.type === TokenTypes.OrderedList || nextToken.type === TokenTypes.UnorderedList) {
         // handle nested list
         if (nextToken.spacesLength / 2 > this.currentToken.spacesLength / 2) {
-          this.advance()
+          this.currentToken = this.currentTokens.shift()
           listItems.push(this.parseBlock())
 
-          if (this.tokens.length <= 0) break
+          if (this.currentTokens.length <= 0) break
           nextToken = this.tokens[0]
         }
       }
 
       if (nextToken.type !== currentListType) break
-      this.advance()
+      this.currentToken = this.currentTokens.shift()
     }
 
     return listItems
