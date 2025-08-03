@@ -16,12 +16,12 @@ describe("image, link and references link", async () => {
     const ecpectedResult: Node = {
       kind: NodeKinds.Block,
       type: NodeTypes.Paragraph,
-      textContent: '',
+      textContent: 'markdown-ast',
       attrs: [],
       childNodes: [{
         kind: NodeKinds.Inline,
         type: NodeTypes.Image,
-        textContent: '',
+        textContent: 'markdown-ast',
         attrs: [["https://github.com/pebrianz/markdown-ast", "Markdown Parser"]],
         childNodes: [{
           kind: NodeKinds.Inline,
@@ -46,17 +46,17 @@ describe("image, link and references link", async () => {
     const ecpectedResult: Node = {
       kind: NodeKinds.Block,
       type: NodeTypes.Paragraph,
-      textContent: '',
+      textContent: 'markdown-ast',
       attrs: [],
       childNodes: [{
         kind: NodeKinds.Inline,
         type: NodeTypes.Link,
-        textContent: '',
+        textContent: 'markdown-ast',
         attrs: [["https://github.com/pebrianz/markdown-ast"]],
         childNodes: [{
           kind: NodeKinds.Inline,
           type: NodeTypes.Image,
-          textContent: "",
+          textContent: "markdown-ast",
           attrs: [["linkImage"]],
           childNodes: [{
             kind: NodeKinds.Inline,
@@ -69,5 +69,27 @@ describe("image, link and references link", async () => {
       }]
     }
     expect(ast.childNodes).toEqual([ecpectedResult])
+  })
+
+  it("should parse token url to link", () => {
+    const src = "<https://github.com/pebrianz/markdown-ast>"
+
+    const tokens = tokenize(src)
+    const ast = parse(tokens)
+
+    const expectedResult: Node = {
+      kind: NodeKinds.Inline,
+      type: NodeTypes.Link,
+      textContent: "https://github.com/pebrianz/markdown-ast",
+      attrs: [["https://github.com/pebrianz/markdown-ast"]],
+      childNodes: [{
+        kind: NodeKinds.Inline,
+        type: NodeTypes.Text,
+        textContent: "https://github.com/pebrianz/markdown-ast",
+        attrs: [],
+        childNodes: []
+      }]
+    }
+    expect(ast.childNodes[0].childNodes).toEqual([expectedResult])
   })
 })

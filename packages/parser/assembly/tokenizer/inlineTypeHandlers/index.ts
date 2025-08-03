@@ -83,6 +83,28 @@ inlineTypeHandlers.set("(", (text, line, column, spacesLength) => {
   }
 })
 
+inlineTypeHandlers.set("<", (text, line, column, spacesLength) => {
+  let value = text[0]
+
+  if (text.length < 1 || text[1] === " ") return new Token()
+
+  let i = 1
+  while (i < text.length) {
+    if (text[i] === " ") return new Token()
+
+    value += text[i]
+    if (text[i++] === ">") break
+  }
+
+  if (value[i - 1] !== '>') return new Token()
+
+  return {
+    kind: TokenKinds.Inline,
+    type: TokenTypes.URL,
+    value, line, column, spacesLength, children: []
+  }
+})
+
 inlineTypeHandlers.set("{", (text, line, column, spacesLength) => {
   let value = text[0]
 
@@ -105,3 +127,13 @@ inlineTypeHandlers.set("{", (text, line, column, spacesLength) => {
   }
 })
 
+
+inlineTypeHandlers.set(":", (text, line, column, spacesLength) => {
+  if (text.length < 2 || text[1] !== " ") return new Token()
+
+  return {
+    kind: TokenKinds.Inline,
+    type: TokenTypes.ColonWithSpace,
+    value: text[0] + text[1], line, column, spacesLength, children: []
+  }
+})

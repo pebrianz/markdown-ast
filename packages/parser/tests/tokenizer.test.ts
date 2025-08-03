@@ -415,6 +415,23 @@ describe("lexer", async () => {
     expect(tokens).toEqual([ecpectedResult])
   })
 
+  it("should tokenize url", () => {
+    const src = "<https://github.com/pebrianz/markdown-ast>"
+
+    const tokens = tokenize(src)
+
+    const expectedResult: Token = {
+      kind: TokenKinds.Inline,
+      type: TokenTypes.URL,
+      value: "<https://github.com/pebrianz/markdown-ast>",
+      line: 1,
+      column: 1,
+      spacesLength: 0,
+      children: []
+    }
+    expect(tokens[0].children).toEqual([expectedResult])
+  })
+
   it("should tokenize escape character", () => {
     const src = dedent`\# \*paragraph\*`
 

@@ -17,7 +17,7 @@ describe("parser", async () => {
     const expectedHeading: Node = {
       kind: NodeKinds.Block,
       type: NodeTypes.Heading,
-      textContent: "",
+      textContent: "heading",
       childNodes: [
         {
           kind: NodeKinds.Inline,
@@ -32,7 +32,7 @@ describe("parser", async () => {
     const expectedParagraph: Node = {
       kind: NodeKinds.Block,
       type: NodeTypes.Paragraph,
-      textContent: "",
+      textContent: "this is paragraph",
       childNodes: [
         {
           kind: NodeKinds.Inline,
@@ -56,7 +56,7 @@ describe("parser", async () => {
     const expectedResult: Node = {
       kind: NodeKinds.Block,
       type: NodeTypes.Heading,
-      textContent: '',
+      textContent: 'heading ',
       attrs: [["#custom-id"]],
       childNodes: [{
         kind: NodeKinds.Inline,
@@ -78,7 +78,7 @@ describe("parser", async () => {
     const expectedItalic: Node = {
       kind: NodeKinds.Inline,
       type: NodeTypes.Italic,
-      textContent: "",
+      textContent: "italic",
       childNodes: [{
         kind: NodeKinds.Inline,
         type: NodeTypes.Text,
@@ -91,7 +91,7 @@ describe("parser", async () => {
     const expectedBold: Node = {
       kind: NodeKinds.Inline,
       type: NodeTypes.Bold,
-      textContent: "",
+      textContent: "bold",
       childNodes: [{
         kind: NodeKinds.Inline,
         type: NodeTypes.Text,
@@ -104,7 +104,7 @@ describe("parser", async () => {
     const expectedItalicBold: Node = {
       kind: NodeKinds.Inline,
       type: NodeTypes.BlockItalic,
-      textContent: "",
+      textContent: "italicbold",
       childNodes: [{
         kind: NodeKinds.Inline,
         type: NodeTypes.Text,
@@ -168,7 +168,7 @@ describe("parser", async () => {
         {
           kind: NodeKinds.Block,
           type: NodeTypes.TableCell,
-          textContent: '',
+          textContent: ' header1 ',
           attrs: [],
           childNodes: [{
             kind: NodeKinds.Inline,
@@ -181,7 +181,7 @@ describe("parser", async () => {
         {
           kind: NodeKinds.Block,
           type: NodeTypes.TableCell,
-          textContent: '',
+          textContent: ' header2 ',
           attrs: [],
           childNodes: [{
             kind: NodeKinds.Inline,
@@ -194,7 +194,7 @@ describe("parser", async () => {
         {
           kind: NodeKinds.Block,
           type: NodeTypes.TableCell,
-          textContent: '',
+          textContent: ' header3 ',
           attrs: [],
           childNodes: [{
             kind: NodeKinds.Inline,
@@ -215,7 +215,7 @@ describe("parser", async () => {
         {
           kind: NodeKinds.Block,
           type: NodeTypes.TableCell,
-          textContent: '',
+          textContent: ' cellA ',
           attrs: [],
           childNodes: [{
             kind: NodeKinds.Inline,
@@ -228,7 +228,7 @@ describe("parser", async () => {
         {
           kind: NodeKinds.Block,
           type: NodeTypes.TableCell,
-          textContent: '',
+          textContent: ' cellB ',
           attrs: [],
           childNodes: [{
             kind: NodeKinds.Inline,
@@ -241,7 +241,7 @@ describe("parser", async () => {
         {
           kind: NodeKinds.Block,
           type: NodeTypes.TableCell,
-          textContent: '',
+          textContent: ' cellC ',
           attrs: [],
           childNodes: [{
             kind: NodeKinds.Inline,
@@ -292,12 +292,12 @@ describe("parser", async () => {
     const ecpectedResult: Node = {
       kind: NodeKinds.Block,
       type: NodeTypes.Paragraph,
-      textContent: '',
+      textContent: 'markdown-ast',
       attrs: [],
       childNodes: [{
         kind: NodeKinds.Inline,
         type: NodeTypes.Link,
-        textContent: '',
+        textContent: 'markdown-ast',
         attrs: [["https://github.com/pebrianz/markdown-ast", "Markdown Parser"]],
         childNodes: [{
           kind: NodeKinds.Inline,

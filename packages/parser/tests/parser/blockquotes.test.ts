@@ -18,7 +18,7 @@ describe("blockquotes", async () => {
       childNodes: [{
         kind: NodeKinds.Block,
         type: NodeTypes.Paragraph,
-        textContent: "",
+        textContent: "this is blockquotes",
         childNodes: [{
           kind: NodeKinds.Inline,
           type: NodeTypes.Text,
@@ -42,7 +42,6 @@ describe("blockquotes", async () => {
 
     const tokens = tokenize(src)
     const ast = parse(tokens)
-    console.dir(ast.childNodes, { depth: null })
 
     const textNode: Node = {
       kind: NodeKinds.Inline,
@@ -55,14 +54,14 @@ describe("blockquotes", async () => {
     const firstParagraph: Node = {
       kind: NodeKinds.Block,
       type: NodeTypes.Paragraph,
-      textContent: '',
+      textContent: 'this is first paragraph',
       attrs: [],
       childNodes: [textNode]
     }
     const secondParagraph: Node = {
       kind: NodeKinds.Block,
       type: NodeTypes.Paragraph,
-      textContent: '',
+      textContent: 'this is second paragraph',
       attrs: [],
       childNodes: [{ ...textNode, textContent: "this is second paragraph" }]
     }
@@ -87,7 +86,7 @@ describe("blockquotes", async () => {
         {
           kind: NodeKinds.Block,
           type: NodeTypes.Paragraph,
-          textContent: '',
+          textContent: 'this is blockquotes',
           attrs: [],
           childNodes: [{
             kind: NodeKinds.Inline,
@@ -105,7 +104,7 @@ describe("blockquotes", async () => {
           childNodes: [{
             kind: NodeKinds.Block,
             type: NodeTypes.Paragraph,
-            textContent: '',
+            textContent: 'this is nested blockquotes',
             attrs: [],
             childNodes: [{
               attrs: [],
@@ -128,9 +127,7 @@ describe("blockquotes", async () => {
     `
 
     const tokens = tokenize(src)
-    console.dir(tokens, { depth: null })
     const ast = parse(tokens)
-    console.dir(ast.childNodes, { depth: null })
 
     const expectedBlockquotes: Node = {
       kind: NodeKinds.Block,
@@ -147,7 +144,7 @@ describe("blockquotes", async () => {
             {
               kind: NodeKinds.Block,
               type: NodeTypes.ListItem,
-              textContent: "",
+              textContent: "first item",
               attrs: [],
               childNodes: [{
                 kind: NodeKinds.Inline,
@@ -160,7 +157,7 @@ describe("blockquotes", async () => {
             {
               kind: NodeKinds.Block,
               type: NodeTypes.ListItem,
-              textContent: "",
+              textContent: "second item",
               attrs: [],
               childNodes: [{
                 kind: NodeKinds.Inline,

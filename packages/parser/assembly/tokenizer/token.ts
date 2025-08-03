@@ -26,6 +26,8 @@ export enum TokenTypes {
   CloseBracket = 58,
   LinkURL = 59,
   CustomID = 60,
+  URL = 61,
+  ColonWithSpace = 62,
 
   Undefined = 500
 }

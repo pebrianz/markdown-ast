@@ -23,7 +23,7 @@ describe("list", async () => {
         {
           kind: NodeKinds.Block,
           type: NodeTypes.ListItem,
-          textContent: '',
+          textContent: 'first item',
           attrs: [],
           childNodes: [{
             kind: NodeKinds.Inline,
@@ -44,7 +44,7 @@ describe("list", async () => {
         {
           kind: NodeKinds.Block,
           type: NodeTypes.ListItem,
-          textContent: '',
+          textContent: 'second item',
           attrs: [],
           childNodes: [{
             kind: NodeKinds.Inline,
@@ -76,7 +76,7 @@ describe("list", async () => {
       childNodes: [{
         kind: NodeKinds.Block,
         type: NodeTypes.ListItem,
-        textContent: '',
+        textContent: 'nested list',
         attrs: [],
         childNodes: [{
           kind: NodeKinds.Inline,
@@ -96,7 +96,7 @@ describe("list", async () => {
         {
           kind: NodeKinds.Block,
           type: NodeTypes.ListItem,
-          textContent: '',
+          textContent: 'list',
           attrs: [],
           childNodes: [{
             kind: NodeKinds.Inline,
