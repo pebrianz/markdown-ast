@@ -264,9 +264,7 @@ describe("parser", async () => {
   })
 
   it("should parse horizontal rule", () => {
-    const src = dedent`
-      ---
-    `
+    const src = "---"
 
     const tokens = tokenize(src)
     const ast = parse(tokens)
@@ -281,33 +279,26 @@ describe("parser", async () => {
     expect(ast.childNodes).toEqual([expectedResult])
   })
 
-  it("should parse link", () => {
-    const src = dedent`
-      [markdown-ast](https://github.com/pebrianz/markdown-ast "Markdown Parser")
-    `
+  it("should parse highlight", () => {
+    const src = "this is ==highlight=="
 
     const tokens = tokenize(src)
     const ast = parse(tokens)
 
-    const ecpectedResult: Node = {
-      kind: NodeKinds.Block,
-      type: NodeTypes.Paragraph,
-      textContent: 'markdown-ast',
+    const expectedResult: Node = {
+      kind: NodeKinds.Inline,
+      type: NodeTypes.Highlight,
+      textContent: "highlight",
       attrs: [],
       childNodes: [{
         kind: NodeKinds.Inline,
-        type: NodeTypes.Link,
-        textContent: 'markdown-ast',
-        attrs: [["https://github.com/pebrianz/markdown-ast", "Markdown Parser"]],
-        childNodes: [{
-          kind: NodeKinds.Inline,
-          type: NodeTypes.Text,
-          textContent: "markdown-ast",
-          attrs: [],
-          childNodes: []
-        }]
+        type: NodeTypes.Text,
+        textContent: "highlight",
+        attrs: [],
+        childNodes: []
       }]
     }
-    expect(ast.childNodes).toEqual([ecpectedResult])
+    const paragraph = ast.childNodes[0]
+    expect(paragraph.childNodes[1]).toEqual(expectedResult)
   })
 })

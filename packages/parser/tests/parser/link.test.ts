@@ -1,13 +1,43 @@
 import { describe, it, expect } from "vitest"
 import dedent from "dedent"
 
-import { tokenize, parse } from "../../build/debug.js"
+import { tokenize, parse, getMapValue } from "../../build/debug.js"
 import { NodeKinds, NodeTypes, type Node } from "../../assembly/parser"
 
 describe("image, link and references link", async () => {
+  it("should parse link", () => {
+    const src = dedent`
+      [markdown-ast](https://github.com/pebrianz/markdown-ast)
+    `
+
+    const tokens = tokenize(src)
+    const ast = parse(tokens)
+
+    const ecpectedResult: Node = {
+      kind: NodeKinds.Block,
+      type: NodeTypes.Paragraph,
+      textContent: 'markdown-ast',
+      attrs: [],
+      childNodes: [{
+        kind: NodeKinds.Inline,
+        type: NodeTypes.Link,
+        textContent: 'markdown-ast',
+        attrs: [["https://github.com/pebrianz/markdown-ast"]],
+        childNodes: [{
+          kind: NodeKinds.Inline,
+          type: NodeTypes.Text,
+          textContent: "markdown-ast",
+          attrs: [],
+          childNodes: []
+        }]
+      }]
+    }
+    expect(ast.childNodes).toEqual([ecpectedResult])
+  })
+
   it("should parse image", () => {
     const src = dedent`
-      ![markdown-ast](https://github.com/pebrianz/markdown-ast "Markdown Parser")
+      ![markdown-ast](https://github.com/pebrianz/markdown-ast)
     `
 
     const tokens = tokenize(src)
@@ -22,7 +52,7 @@ describe("image, link and references link", async () => {
         kind: NodeKinds.Inline,
         type: NodeTypes.Image,
         textContent: 'markdown-ast',
-        attrs: [["https://github.com/pebrianz/markdown-ast", "Markdown Parser"]],
+        attrs: [["https://github.com/pebrianz/markdown-ast"]],
         childNodes: [{
           kind: NodeKinds.Inline,
           type: NodeTypes.Text,
@@ -91,5 +121,15 @@ describe("image, link and references link", async () => {
       }]
     }
     expect(ast.childNodes[0].childNodes).toEqual([expectedResult])
+  })
+
+  it("chould parse link reference", () => {
+    const src = "[1]: https://github.com/pebrianz/markdown-ast"
+
+    const tokens = tokenize(src)
+    const ast = parse(tokens)
+
+    const link = getMapValue(ast.references, "1")
+    expect(link).toEqual("https://github.com/pebrianz/markdown-ast")
   })
 })

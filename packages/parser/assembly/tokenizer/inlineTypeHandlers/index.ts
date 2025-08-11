@@ -127,7 +127,6 @@ inlineTypeHandlers.set("{", (text, line, column, spacesLength) => {
   }
 })
 
-
 inlineTypeHandlers.set(":", (text, line, column, spacesLength) => {
   if (text.length < 2 || text[1] !== " ") return new Token()
 
@@ -135,5 +134,18 @@ inlineTypeHandlers.set(":", (text, line, column, spacesLength) => {
     kind: TokenKinds.Inline,
     type: TokenTypes.ColonWithSpace,
     value: text[0] + text[1], line, column, spacesLength, children: []
+  }
+})
+
+inlineTypeHandlers.set("=", (text, line, column, spacesLength) => {
+  let mark = text[0]
+
+  if (text.length < 2 || text[1] !== "=") return new Token()
+  mark += text[1]
+
+  return {
+    kind: TokenKinds.Inline,
+    type: TokenTypes.DoubleEqual,
+    value: mark, line, column, spacesLength, children: []
   }
 })
