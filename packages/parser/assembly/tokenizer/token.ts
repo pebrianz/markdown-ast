@@ -14,6 +14,7 @@ export enum TokenTypes {
   OrderedList = 5,
   UnorderedList = 6,
   HorizontalRule = 7,
+  Fenced = 8,
 
   // Inline token types
   Text = 50,

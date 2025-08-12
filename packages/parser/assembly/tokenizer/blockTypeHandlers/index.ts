@@ -51,16 +51,15 @@ blockTypeHandlers.set("|", (text, line, column, spacesLength) => {
 
 blockTypeHandlers.set("-", (text, line, column, spacesLength) => {
   let mark = text[0]
-  let i = 1
+  let i = 0
   let isHorizontalRule = true
-  while (i < text.length) {
+  while (++i < text.length) {
     if (text[i] !== "-") {
       isHorizontalRule = false
       break
     }
 
     mark += text[i]
-    i++
   }
 
   if (isHorizontalRule && mark.length >= 3) return {
@@ -82,17 +81,33 @@ blockTypeHandlers.set("-", (text, line, column, spacesLength) => {
 
 blockTypeHandlers.set("number", (text, line, column, spacesLength) => {
   let mark = text[0]
-  let i = 1
-  while (i <= 2) {
-    mark += text[i]
-    i++
-  }
+  let i = 0
+  while (++i <= 2) { mark += text[i] }
 
   if (mark.length !== 3 || mark[1] !== "." || mark[2] !== " ") return new Token()
 
   return {
     kind: TokenKinds.Block,
     type: TokenTypes.OrderedList,
+    value: mark,
+    line, column, spacesLength, children: []
+  }
+})
+
+
+blockTypeHandlers.set("`", (text, line, column, spacesLength) => {
+  let mark = text[0]
+  let i = 0
+  while (++i < text.length) {
+    if (mark.length < 3 && text[i] !== "`") return new Token()
+    mark += text[i]
+  }
+
+  if (mark.length < 3) return new Token()
+
+  return {
+    kind: TokenKinds.Block,
+    type: TokenTypes.Fenced,
     value: mark,
     line, column, spacesLength, children: []
   }

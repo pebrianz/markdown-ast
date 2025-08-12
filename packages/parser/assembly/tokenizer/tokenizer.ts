@@ -111,6 +111,22 @@ export class Tokenizer {
 
     column = token.spacesLength + token.value.length + 1 + _column
 
+    if (token.type === TokenTypes.Fenced) {
+      if (this.lines.length <= 0) return token
+      this.advance()
+
+      while (true) {
+        if (this.currentLine.trim() === "```") break
+        token.value += "\n"
+        token.value += this.currentLine
+
+        if (this.lines.length <= 0) break
+        this.advance()
+      }
+
+      return token
+    }
+
     if (token.type === TokenTypes.Blockquotes) {
       token.children.push(this.tokenizeBlock(trimed.slice(token.value.length), column - 1))
 

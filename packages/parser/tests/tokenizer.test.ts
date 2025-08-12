@@ -432,6 +432,22 @@ describe("lexer", async () => {
     expect(tokens[0].children).toEqual([expectedResult])
   })
 
+  it("should tokenize fenced code block", () => {
+    const src = dedent`
+      \`\`\`ts
+      let a = "hello world"
+      console.log(a)
+      \`\`\`
+    `
+    const tokens = tokenize(src)
+    const expectedValue = dedent`
+      \`\`\`ts
+      let a = "hello world"
+      console.log(a)
+    `
+    expect(tokens[0].value).toEqual(expectedValue)
+  })
+
   it("should tokenize escape character", () => {
     const src = dedent`\# \*paragraph\*`
 

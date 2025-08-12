@@ -301,4 +301,25 @@ describe("parser", async () => {
     const paragraph = ast.childNodes[0]
     expect(paragraph.childNodes[1]).toEqual(expectedResult)
   })
+
+  it("should tokenize fenced code block", () => {
+    const src = dedent`
+      \`\`\`ts
+      let a = "hello world"
+      console.log(a)
+      \`\`\`
+    `
+
+    const tokens = tokenize(src)
+    const ast = parse(tokens)
+
+    const expected: Node = {
+      kind: NodeKinds.Block,
+      type: NodeTypes.Fenced,
+      childNodes: [],
+      attrs: [],
+      textContent: '```ts\nlet a = "hello world"\nconsole.log(a)'
+    }
+    expect(ast.childNodes[0]).toEqual(expected)
+  })
 })

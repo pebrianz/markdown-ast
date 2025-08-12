@@ -19,6 +19,7 @@ export enum NodeTypes {
   List = 8,
   ListItem = 9,
   HorizontalRule = 10,
+  Fenced = 11,
 
   // Inline node types
   Text = 50,
@@ -510,23 +511,20 @@ export class Parser {
 
   private parseBlock(): Node {
     switch (this.currentToken.type) {
-      case TokenTypes.Heading: {
+      case TokenTypes.Heading:
         return this.parseHeading()
-      }
       case TokenTypes.Blockquotes:
         return this.parseBlockquotes()
-      case TokenTypes.HorizontalRule: {
+      case TokenTypes.Fenced:
+        return { kind: NodeKinds.Block, type: NodeTypes.Fenced, textContent: this.currentToken.value, attrs: [], childNodes: [] }
+      case TokenTypes.HorizontalRule:
         return { kind: NodeKinds.Block, type: NodeTypes.HorizontalRule, textContent: '', attrs: [], childNodes: [] }
-      }
-      case TokenTypes.UnorderedList: {
+      case TokenTypes.UnorderedList:
         return this.parseList()
-      }
-      case TokenTypes.OrderedList: {
+      case TokenTypes.OrderedList:
         return this.parseList()
-      }
-      case TokenTypes.TableRow: {
+      case TokenTypes.TableRow:
         return this.parseTable()
-      }
 
       default: {
         const childNodes: Node[] = this.parseChildren(this.currentToken.children)
