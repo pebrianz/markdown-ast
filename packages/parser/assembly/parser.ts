@@ -30,6 +30,7 @@ export enum NodeTypes {
   Image = 56,
   LinkReference = 57,
   Highlight = 58,
+  Strikethrough = 59
 }
 
 export class Node {
@@ -194,7 +195,7 @@ export class Parser {
     let currentToken = children.shift()
     let textContent = ""
 
-    while (currentToken.type !== TokenTypes.DoubleEqual) {
+    while (currentToken.type !== TokenTypes.EqualEqual) {
       const node = this.parseInline(currentToken)
       textContent += node.textContent
       childNodes.push(node)
@@ -204,6 +205,28 @@ export class Parser {
     }
 
     return { kind: NodeKinds.Inline, type: NodeTypes.Highlight, textContent, childNodes, attrs: [] }
+  }
+
+  private parseStrikethrough(): Node {
+    const children = this.currentToken.children
+
+    if (children.length <= 0) return { kind: NodeKinds.Inline, type: NodeTypes.Strikethrough, textContent: '', attrs: [], childNodes: [] }
+
+    const childNodes: Node[] = []
+
+    let currentToken = children.shift()
+    let textContent = ""
+
+    while (currentToken.type !== TokenTypes.TildeTilde) {
+      const node = this.parseInline(currentToken)
+      textContent += node.textContent
+      childNodes.push(node)
+
+      if (children.length <= 0) break
+      currentToken = children.shift()
+    }
+
+    return { kind: NodeKinds.Inline, type: NodeTypes.Strikethrough, textContent, childNodes, attrs: [] }
   }
 
   private parseInline(currentInlineToken: Token): Node {
@@ -228,8 +251,10 @@ export class Parser {
         return this.parseText(currentInlineToken.value)
       case TokenTypes.CustomID:
         return this.parseText(currentInlineToken.value)
-      case TokenTypes.DoubleEqual:
+      case TokenTypes.EqualEqual:
         return this.parseHighlight()
+      case TokenTypes.TildeTilde:
+        return this.parseStrikethrough()
       case TokenTypes.Bang:
         if (this.currentToken.children.length <= 0 || this.currentToken.children[0].type !== TokenTypes.OpenBracket) {
           return this.parseText(currentInlineToken.value)

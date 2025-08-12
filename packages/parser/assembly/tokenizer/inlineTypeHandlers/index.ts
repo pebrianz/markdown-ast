@@ -145,7 +145,20 @@ inlineTypeHandlers.set("=", (text, line, column, spacesLength) => {
 
   return {
     kind: TokenKinds.Inline,
-    type: TokenTypes.DoubleEqual,
+    type: TokenTypes.EqualEqual,
+    value: mark, line, column, spacesLength, children: []
+  }
+})
+
+inlineTypeHandlers.set("~", (text, line, column, spacesLength) => {
+  let mark = text[0]
+
+  if (text.length < 2 || text[1] !== "~") return new Token()
+  mark += text[1]
+
+  return {
+    kind: TokenKinds.Inline,
+    type: TokenTypes.TildeTilde,
     value: mark, line, column, spacesLength, children: []
   }
 })

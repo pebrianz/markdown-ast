@@ -28,7 +28,8 @@ export enum TokenTypes {
   CustomID = 60,
   URL = 61,
   ColonWithSpace = 62,
-  DoubleEqual = 63,
+  EqualEqual = 63,
+  TildeTilde = 64,
 
   Undefined = 500
 }
