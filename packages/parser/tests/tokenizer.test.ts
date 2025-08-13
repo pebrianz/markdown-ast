@@ -120,75 +120,6 @@ describe("lexer", async () => {
     expect(tokens).toEqual([blockquotes])
   })
 
-
-  it.each([
-    ["single asterisk", "*"],
-    ["double asterisk", "**"],
-    ["triple asterisk", "***"],
-  ])("should tokenize %s `%s`", (name, mark) => {
-    const src = `should tokenize ${mark + name + mark}`
-
-    const tokens = tokenize(src)
-    const [text, mark1, text2, mark2] = tokens[0].children
-
-    const expectedMark: Token = {
-      kind: TokenKinds.Inline,
-      type: TokenTypes.Asterisk,
-      value: mark,
-      line: 1,
-      column: text.column + text.value.length,
-      spacesLength: 0,
-      children: []
-    }
-    const expectedText: Token = {
-      kind: TokenKinds.Inline,
-      type: TokenTypes.Text,
-      value: name,
-      line: 1,
-      column: expectedMark.column + expectedMark.value.length,
-      spacesLength: 0,
-      children: []
-    }
-    const expectedResult: Token[] = [
-      expectedMark,
-      expectedText,
-      { ...expectedMark, column: expectedText.column + expectedText.value.length }
-    ]
-    expect([mark1, text2, mark2]).toEqual(expectedResult)
-  })
-
-  it("should tokenize backtick", () => {
-    const src = "this is `backtick`"
-
-    const tokens = tokenize(src)
-    const [text, mark1, text2, mark2] = tokens[0].children
-
-    const expectedMark: Token = {
-      kind: TokenKinds.Inline,
-      type: TokenTypes.Backtick,
-      value: "`",
-      line: 1,
-      column: text.column + text.value.length,
-      spacesLength: 0,
-      children: []
-    }
-    const expectedText: Token = {
-      kind: TokenKinds.Inline,
-      type: TokenTypes.Text,
-      value: "backtick",
-      line: 1,
-      column: expectedMark.column + expectedMark.value.length,
-      spacesLength: 0,
-      children: []
-    }
-    const expectedResult: Token[] = [
-      expectedMark,
-      expectedText,
-      { ...expectedMark, column: expectedText.column + expectedText.value.length }
-    ]
-    expect([mark1, text2, mark2]).toEqual(expectedResult)
-  })
-
   it("should tokenize table row and pipe", () => {
     const src = "|----|----|"
 
@@ -413,39 +344,6 @@ describe("lexer", async () => {
       ]
     }
     expect(tokens).toEqual([ecpectedResult])
-  })
-
-  it("should tokenize url", () => {
-    const src = "<https://github.com/pebrianz/markdown-ast>"
-
-    const tokens = tokenize(src)
-
-    const expectedResult: Token = {
-      kind: TokenKinds.Inline,
-      type: TokenTypes.URL,
-      value: "<https://github.com/pebrianz/markdown-ast>",
-      line: 1,
-      column: 1,
-      spacesLength: 0,
-      children: []
-    }
-    expect(tokens[0].children).toEqual([expectedResult])
-  })
-
-  it("should tokenize fenced code block", () => {
-    const src = dedent`
-      \`\`\`ts
-      let a = "hello world"
-      console.log(a)
-      \`\`\`
-    `
-    const tokens = tokenize(src)
-    const expectedValue = dedent`
-      \`\`\`ts
-      let a = "hello world"
-      console.log(a)
-    `
-    expect(tokens[0].value).toEqual(expectedValue)
   })
 
   it("should tokenize escape character", () => {

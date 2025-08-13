@@ -111,37 +111,38 @@ export class Tokenizer {
 
     column = token.spacesLength + token.value.length + 1 + _column
 
-    if (token.type === TokenTypes.Fenced) {
-      if (this.lines.length <= 0) return token
-      this.advance()
-
-      while (true) {
-        if (this.currentLine.trim() === "```") break
-        token.value += "\n"
-        token.value += this.currentLine
-
-        if (this.lines.length <= 0) break
+    switch (token.type) {
+      case TokenTypes.Fenced: {
+        if (this.lines.length <= 0) return token
         this.advance()
+
+        while (true) {
+          if (this.currentLine.trim() === "```") break
+          token.value += "\n"
+          token.value += this.currentLine
+
+          if (this.lines.length <= 0) break
+          this.advance()
+        }
+
+        return token
       }
+      case TokenTypes.Blockquotes: {
+        token.children.push(this.tokenizeBlock(trimed.slice(token.value.length), column - 1))
 
-      return token
-    }
+        if (this.lines.length <= 0) return token
+        let key: string = this.lines[0].trimStart()[0]
 
-    if (token.type === TokenTypes.Blockquotes) {
-      token.children.push(this.tokenizeBlock(trimed.slice(token.value.length), column - 1))
+        while (key === '>') {
+          this.advance()
+          token.children = token.children.concat(this.tokenizeBlock(this.currentLine).children)
 
-      if (this.lines.length <= 0) return token
-      let key: string = this.lines[0].trimStart()[0]
+          if (this.lines.length <= 0) break
+          key = this.lines[0].trimStart()[0]
+        }
 
-      while (key === '>') {
-        this.advance()
-        token.children = token.children.concat(this.tokenizeBlock(this.currentLine).children)
-
-        if (this.lines.length <= 0) break
-        key = this.lines[0].trimStart()[0]
+        return token
       }
-
-      return token
     }
 
     token.children = this.tokenizeInline(trimed.slice(token.value.length), column)

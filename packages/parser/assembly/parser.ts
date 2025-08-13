@@ -62,7 +62,7 @@ export class Parser {
     }
   }
 
-  parseInlineCode(): Node {
+  private parseCode(): Node {
     const children = this.currentToken.children
 
     if (children.length <= 0) return { kind: NodeKinds.Inline, type: NodeTypes.Code, textContent: '', childNodes: [], attrs: [] }
@@ -109,7 +109,7 @@ export class Parser {
 
     const childNodes: Node[] = []
 
-    let currentToken: Token = children.shift()
+    let currentToken = children.shift()
     let textContent = ''
 
     while (currentToken.type !== TokenTypes.CloseBracket) {
@@ -172,7 +172,7 @@ export class Parser {
   }
 
   private parseURL(value: string): Node {
-    const url: string = value.slice(1, -1)
+    const url = value.slice(1, -1)
     return {
       kind: NodeKinds.Inline, type: NodeTypes.Link, textContent: url,
       attrs: [[url]],
@@ -186,17 +186,17 @@ export class Parser {
     }
   }
 
-  private parseHighlight(): Node {
+  private parseWrapedInline(tokenType: TokenTypes, nodeType: NodeTypes): Node {
     const children = this.currentToken.children
 
-    if (children.length <= 0) return { kind: NodeKinds.Inline, type: NodeTypes.Highlight, textContent: '', attrs: [], childNodes: [] }
+    if (children.length <= 0) return { kind: NodeKinds.Inline, type: nodeType, textContent: '', attrs: [], childNodes: [] }
 
     const childNodes: Node[] = []
 
     let currentToken = children.shift()
     let textContent = ""
 
-    while (currentToken.type !== TokenTypes.EqualEqual) {
+    while (currentToken.type !== tokenType) {
       const node = this.parseInline(currentToken)
       textContent += node.textContent
       childNodes.push(node)
@@ -205,60 +205,38 @@ export class Parser {
       currentToken = children.shift()
     }
 
-    return { kind: NodeKinds.Inline, type: NodeTypes.Highlight, textContent, childNodes, attrs: [] }
+    return { kind: NodeKinds.Inline, type: nodeType, textContent, childNodes, attrs: [] }
   }
 
-  private parseStrikethrough(): Node {
-    const children = this.currentToken.children
-
-    if (children.length <= 0) return { kind: NodeKinds.Inline, type: NodeTypes.Strikethrough, textContent: '', attrs: [], childNodes: [] }
-
-    const childNodes: Node[] = []
-
-    let currentToken = children.shift()
-    let textContent = ""
-
-    while (currentToken.type !== TokenTypes.TildeTilde) {
-      const node = this.parseInline(currentToken)
-      textContent += node.textContent
-      childNodes.push(node)
-
-      if (children.length <= 0) break
-      currentToken = children.shift()
-    }
-
-    return { kind: NodeKinds.Inline, type: NodeTypes.Strikethrough, textContent, childNodes, attrs: [] }
-  }
-
-  private parseInline(currentInlineToken: Token): Node {
-    switch (currentInlineToken.type) {
+  private parseInline(token: Token): Node {
+    switch (token.type) {
       case TokenTypes.Text:
-        return this.parseText(currentInlineToken.value)
+        return this.parseText(token.value)
       case TokenTypes.Asterisk:
-        return this.parseBlockItalic(currentInlineToken.type, currentInlineToken.value.length)
+        return this.parseBlockItalic(token.type, token.value.length)
+      case TokenTypes.EqualEqual:
+        return this.parseWrapedInline(TokenTypes.EqualEqual, NodeTypes.Highlight)
+      case TokenTypes.TildeTilde:
+        return this.parseWrapedInline(TokenTypes.TildeTilde, NodeTypes.Strikethrough)
       case TokenTypes.Backtick:
-        return this.parseInlineCode()
+        return this.parseCode()
       case TokenTypes.OpenBracket:
         return this.parseLink()
       case TokenTypes.CloseBracket:
-        return this.parseText(currentInlineToken.value)
+        return this.parseText(token.value)
       case TokenTypes.LinkURL:
-        return this.parseText(currentInlineToken.value)
+        return this.parseText(token.value)
       case TokenTypes.URL:
-        return this.parseURL(currentInlineToken.value)
+        return this.parseURL(token.value)
       case TokenTypes.ColonWithSpace:
-        return this.parseText(currentInlineToken.value)
+        return this.parseText(token.value)
       case TokenTypes.Pipe:
-        return this.parseText(currentInlineToken.value)
+        return this.parseText(token.value)
       case TokenTypes.CustomID:
-        return this.parseText(currentInlineToken.value)
-      case TokenTypes.EqualEqual:
-        return this.parseHighlight()
-      case TokenTypes.TildeTilde:
-        return this.parseStrikethrough()
+        return this.parseText(token.value)
       case TokenTypes.Bang:
         if (this.currentToken.children.length <= 0 || this.currentToken.children[0].type !== TokenTypes.OpenBracket) {
-          return this.parseText(currentInlineToken.value)
+          return this.parseText(token.value)
         }
         this.currentToken.children.shift()
         return this.parseImage()
@@ -267,20 +245,23 @@ export class Parser {
     throw new Error()
   }
 
-  private parseChildren(children: Token[]): Node[] {
+  private parseChildren(children: Token[]): Node {
+    if (children.length <= 0) return { kind: NodeKinds.Document, type: NodeTypes.Document, textContent: '', childNodes: [], attrs: [] }
     const childNodes: Node[] = []
 
-    if (children.length <= 0) return childNodes
+    let currentToken = children.shift()
+    let textContent = ""
 
-    let currentToken: Token = children.shift()
     while (currentToken.kind === TokenKinds.Inline) {
-      childNodes.push(this.parseInline(currentToken))
+      const node = this.parseInline(currentToken)
+      textContent += node.textContent
+      childNodes.push(node)
 
       if (children.length <= 0) break
       currentToken = children.shift()
     }
 
-    return childNodes
+    return { kind: NodeKinds.Document, type: NodeTypes.Document, textContent, childNodes, attrs: [] }
   }
 
   private parseHeading(): Node {
@@ -339,15 +320,14 @@ export class Parser {
     const currentListType = this.currentToken.type
 
     while (true) {
-      const childNodes = this.parseChildren(this.currentToken.children)
-      const textContent: string = childNodes.reduce((p, c) => p + c.textContent, "")
+      const parsedChildren = this.parseChildren(this.currentToken.children)
 
       listItems.push({
         kind: NodeKinds.Block,
         type: NodeTypes.ListItem,
-        textContent,
+        textContent: parsedChildren.textContent,
         attrs: [],
-        childNodes
+        childNodes: parsedChildren.childNodes
       })
 
       if (this.currentTokens.length <= 0) break
@@ -487,8 +467,7 @@ export class Parser {
     }
 
     if (align.length < 1) {
-      const childNodes = this.parseChildren([])
-      return { kind: NodeKinds.Block, type: NodeTypes.Paragraph, textContent: '', childNodes, attrs: [] }
+      return { kind: NodeKinds.Block, type: NodeTypes.Paragraph, textContent: '', childNodes: [], attrs: [] }
     }
 
     const header: Node = {
@@ -527,8 +506,9 @@ export class Parser {
         return this.parseTable()
 
       default: {
-        const childNodes: Node[] = this.parseChildren(this.currentToken.children)
-        const textContent: string = childNodes.reduce((p, c) => p + c.textContent, "")
+        const parsedChildren = this.parseChildren(this.currentToken.children)
+        const textContent = parsedChildren.textContent
+        const childNodes = parsedChildren.childNodes
 
         switch (this.currentToken.type) {
           case TokenTypes.Paragraph:
