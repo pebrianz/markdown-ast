@@ -1,15 +1,15 @@
 // The entry file of your WebAssembly module.
 import { Tokenizer } from "./tokenizer/tokenizer"
-import { Node, Parser, Document } from "./parser"
-
+// biome-ignore lint/style/useImportType:
+import { Parser, Document } from "./parser"
+// biome-ignore lint/style/useImportType:
 import { Token } from "./tokenizer/token"
 
 export { TokenKinds, TokenTypes } from "./tokenizer/token"
 export { NodeKinds, NodeTypes } from "./parser"
 
 export function tokenize(src: string): Token[] {
-  const tokenizer = new Tokenizer(src)
-  return tokenizer.tokenize()
+  return new Tokenizer(src).tokenize()
 }
 
 export function parse(tokens: Token[]): Document {

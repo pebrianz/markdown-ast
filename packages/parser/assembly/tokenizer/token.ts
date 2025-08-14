@@ -26,11 +26,10 @@ export enum TokenTypes {
   OpenBracket = 57,
   CloseBracket = 58,
   LinkURL = 59,
-  CustomID = 60,
-  URL = 61,
-  ColonWithSpace = 62,
-  EqualEqual = 63,
-  TildeTilde = 64,
+  URL = 60,
+  ColonWithSpace = 61,
+  EqualEqual = 62,
+  TildeTilde = 63,
 
   Undefined = 500
 }
@@ -40,6 +39,7 @@ export class Token {
   type: TokenTypes = TokenTypes.Undefined
   line: i32 = 0
   column: i32 = 0
+  // biome-ignore lint/style/noInferrableTypes:
   value: string = ""
   spacesLength: i32 = 0
   children: Token[] = []

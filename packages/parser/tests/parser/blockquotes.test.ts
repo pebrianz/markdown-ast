@@ -43,27 +43,31 @@ describe("blockquotes", async () => {
     const tokens = tokenize(src)
     const ast = parse(tokens)
 
-    const textNode: Node = {
-      kind: NodeKinds.Inline,
-      type: NodeTypes.Text,
-      textContent: "this is first paragraph",
-      attrs: [],
-      childNodes: []
-    }
-
     const firstParagraph: Node = {
       kind: NodeKinds.Block,
       type: NodeTypes.Paragraph,
       textContent: 'this is first paragraph',
       attrs: [],
-      childNodes: [textNode]
+      childNodes: [{
+        kind: NodeKinds.Inline,
+        type: NodeTypes.Text,
+        textContent: "this is first paragraph",
+        attrs: [],
+        childNodes: []
+      }]
     }
     const secondParagraph: Node = {
       kind: NodeKinds.Block,
       type: NodeTypes.Paragraph,
       textContent: 'this is second paragraph',
       attrs: [],
-      childNodes: [{ ...textNode, textContent: "this is second paragraph" }]
+      childNodes: [{
+        kind: NodeKinds.Inline,
+        type: NodeTypes.Text,
+        textContent: 'this is second paragraph',
+        attrs: [],
+        childNodes: []
+      }]
     }
     expect(ast.childNodes[0].childNodes).toEqual([firstParagraph, secondParagraph])
   })
@@ -124,6 +128,7 @@ describe("blockquotes", async () => {
     const src = dedent`
       > - first item
       > - second item
+      >   paragraph inside second item
     `
 
     const tokens = tokenize(src)
@@ -144,28 +149,55 @@ describe("blockquotes", async () => {
             {
               kind: NodeKinds.Block,
               type: NodeTypes.ListItem,
-              textContent: "first item",
+              textContent: "",
               attrs: [],
               childNodes: [{
-                kind: NodeKinds.Inline,
-                type: NodeTypes.Text,
+                kind: NodeKinds.Block,
+                type: NodeTypes.Paragraph,
                 textContent: "first item",
-                childNodes: [],
-                attrs: []
+                attrs: [],
+                childNodes: [{
+                  kind: NodeKinds.Inline,
+                  type: NodeTypes.Text,
+                  textContent: "first item",
+                  childNodes: [],
+                  attrs: []
+                }],
               }],
             },
             {
               kind: NodeKinds.Block,
               type: NodeTypes.ListItem,
-              textContent: "second item",
+              textContent: "",
               attrs: [],
-              childNodes: [{
-                kind: NodeKinds.Inline,
-                type: NodeTypes.Text,
-                textContent: "second item",
-                childNodes: [],
-                attrs: []
-              }],
+              childNodes: [
+                {
+                  kind: NodeKinds.Block,
+                  type: NodeTypes.Paragraph,
+                  textContent: "second item",
+                  attrs: [],
+                  childNodes: [{
+                    kind: NodeKinds.Inline,
+                    type: NodeTypes.Text,
+                    textContent: "second item",
+                    childNodes: [],
+                    attrs: [],
+                  }],
+                },
+                {
+                  kind: NodeKinds.Block,
+                  type: NodeTypes.Paragraph,
+                  textContent: "paragraph inside second item",
+                  attrs: [],
+                  childNodes: [{
+                    kind: NodeKinds.Inline,
+                    type: NodeTypes.Text,
+                    textContent: "paragraph inside second item",
+                    attrs: [],
+                    childNodes: []
+                  }]
+                }
+              ],
             }
           ]
         },

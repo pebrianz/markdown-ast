@@ -123,13 +123,13 @@ describe("image, link and references link", async () => {
     expect(ast.childNodes[0].childNodes).toEqual([expectedResult])
   })
 
-  it("chould parse link reference", () => {
+  it("should parse link reference", () => {
     const src = "[1]: https://github.com/pebrianz/markdown-ast"
 
     const tokens = tokenize(src)
     const ast = parse(tokens)
 
-    const link = getMapValue(ast.references, "1")
-    expect(link).toEqual("https://github.com/pebrianz/markdown-ast")
+    const link = getMapValue(ast.linkReferences, "1")
+    expect(link).toBe("https://github.com/pebrianz/markdown-ast")
   })
 })

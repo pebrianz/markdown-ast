@@ -23,14 +23,20 @@ describe("list", async () => {
         {
           kind: NodeKinds.Block,
           type: NodeTypes.ListItem,
-          textContent: 'first item',
+          textContent: '',
           attrs: [],
           childNodes: [{
-            kind: NodeKinds.Inline,
-            type: NodeTypes.Text,
+            kind: NodeKinds.Block,
+            type: NodeTypes.Paragraph,
             textContent: "first item",
             attrs: [],
-            childNodes: []
+            childNodes: [{
+              kind: NodeKinds.Inline,
+              type: NodeTypes.Text,
+              textContent: "first item",
+              attrs: [],
+              childNodes: []
+            }]
           }]
         }
       ]
@@ -44,14 +50,20 @@ describe("list", async () => {
         {
           kind: NodeKinds.Block,
           type: NodeTypes.ListItem,
-          textContent: 'second item',
+          textContent: '',
           attrs: [],
           childNodes: [{
-            kind: NodeKinds.Inline,
-            type: NodeTypes.Text,
+            kind: NodeKinds.Block,
+            type: NodeTypes.Paragraph,
             textContent: "second item",
             attrs: [],
-            childNodes: []
+            childNodes: [{
+              kind: NodeKinds.Inline,
+              type: NodeTypes.Text,
+              textContent: "second item",
+              attrs: [],
+              childNodes: []
+            }]
           }]
         }
       ]
@@ -60,33 +72,14 @@ describe("list", async () => {
   })
 
   it("should parse nested list", () => {
-    const src = `
+    const src = dedent`
       - list
-         1. nested list
+        1. nested list
     `
 
-    const tokens = tokenize(src.trim())
+    const tokens = tokenize(src)
     const ast = parse(tokens)
 
-    const nestedList: Node = {
-      kind: NodeKinds.Block,
-      type: NodeTypes.List,
-      textContent: '',
-      attrs: [["ordered", "1"]],
-      childNodes: [{
-        kind: NodeKinds.Block,
-        type: NodeTypes.ListItem,
-        textContent: 'nested list',
-        attrs: [],
-        childNodes: [{
-          kind: NodeKinds.Inline,
-          type: NodeTypes.Text,
-          textContent: 'nested list',
-          attrs: [],
-          childNodes: []
-        }]
-      }]
-    }
     const list: Node = {
       kind: NodeKinds.Block,
       type: NodeTypes.List,
@@ -96,19 +89,147 @@ describe("list", async () => {
         {
           kind: NodeKinds.Block,
           type: NodeTypes.ListItem,
-          textContent: 'list',
+          textContent: '',
           attrs: [],
           childNodes: [{
-            kind: NodeKinds.Inline,
-            type: NodeTypes.Text,
-            textContent: 'list',
+            kind: NodeKinds.Block,
+            type: NodeTypes.Paragraph,
+            textContent: "list",
             attrs: [],
-            childNodes: []
-          }]
+            childNodes: [{
+              kind: NodeKinds.Inline,
+              type: NodeTypes.Text,
+              textContent: "list",
+              attrs: [],
+              childNodes: []
+            }]
+          },
+          {
+            kind: NodeKinds.Block,
+            type: NodeTypes.List,
+            textContent: '',
+            attrs: [["ordered", "1"]],
+            childNodes: [{
+              kind: NodeKinds.Block,
+              type: NodeTypes.ListItem,
+              textContent: '',
+              attrs: [],
+              childNodes: [{
+                kind: NodeKinds.Block,
+                type: NodeTypes.Paragraph,
+                textContent: 'nested list',
+                attrs: [],
+                childNodes: [{
+                  kind: NodeKinds.Inline,
+                  type: NodeTypes.Text,
+                  textContent: 'nested list',
+                  attrs: [],
+                  childNodes: []
+                }]
+              }]
+            }]
+          }
+          ]
         },
-        nestedList
       ]
     }
     expect(ast.childNodes).toEqual([list])
+  })
+
+  it("should parse block inside list", () => {
+    const src = dedent`
+      - first item of list
+        
+        this is paragraph inside first item
+         
+        > this is blockquotes
+         
+      - second item of list
+    `
+
+    const tokens = tokenize(src)
+    const ast = parse(tokens)
+
+    const expectedList: Node = {
+      kind: NodeKinds.Block,
+      type: NodeTypes.List,
+      textContent: '',
+      attrs: [["unordered", "0"]],
+      childNodes: [
+        {
+          kind: NodeKinds.Block,
+          type: NodeTypes.ListItem,
+          textContent: "",
+          attrs: [],
+          childNodes: [
+            {
+              kind: NodeKinds.Block,
+              type: NodeTypes.Paragraph,
+              textContent: "first item of list",
+              attrs: [],
+              childNodes: [{
+                kind: NodeKinds.Inline,
+                type: NodeTypes.Text,
+                textContent: 'first item of list',
+                attrs: [],
+                childNodes: []
+              }]
+            },
+            {
+              kind: NodeKinds.Block,
+              type: NodeTypes.Paragraph,
+              textContent: "this is paragraph inside first item",
+              attrs: [],
+              childNodes: [{
+                kind: NodeKinds.Inline,
+                type: NodeTypes.Text,
+                textContent: 'this is paragraph inside first item',
+                attrs: [],
+                childNodes: []
+              }]
+            },
+            {
+              kind: NodeKinds.Block,
+              type: NodeTypes.Blockquotes,
+              textContent: '',
+              attrs: [],
+              childNodes: [{
+                kind: NodeKinds.Block,
+                type: NodeTypes.Paragraph,
+                textContent: "this is blockquotes",
+                attrs: [],
+                childNodes: [{
+                  kind: NodeKinds.Inline,
+                  type: NodeTypes.Text,
+                  textContent: "this is blockquotes",
+                  attrs: [],
+                  childNodes: []
+                }]
+              }]
+            }
+          ]
+        },
+        {
+          kind: NodeKinds.Block,
+          type: NodeTypes.ListItem,
+          textContent: '',
+          attrs: [],
+          childNodes: [{
+            kind: NodeKinds.Block,
+            type: NodeTypes.Paragraph,
+            textContent: "second item of list",
+            attrs: [],
+            childNodes: [{
+              kind: NodeKinds.Inline,
+              type: NodeTypes.Text,
+              textContent: "second item of list",
+              attrs: [],
+              childNodes: []
+            }]
+          }]
+        }
+      ]
+    }
+    expect(ast.childNodes).toEqual([expectedList])
   })
 })

@@ -46,7 +46,7 @@ export class Document {
   kind: NodeKinds = NodeKinds.Document
   type: NodeTypes = NodeTypes.Document
   childNodes: Node[] = []
-  references: Map<string, string> = new Map<string, string>()
+  linkReferences: Map<string, string> = new Map<string, string>()
 }
 
 export class Parser {
@@ -123,7 +123,7 @@ export class Parser {
 
     if (children.length > 1 && children[0].type === TokenTypes.ColonWithSpace) {
       const url = children[1].value.trim()
-      this.document.references.set(textContent, children[1].value.trim())
+      this.document.linkReferences.set(textContent, children[1].value.trim())
       return { kind: NodeKinds.Inline, type: NodeTypes.LinkReference, textContent, attrs: [[url]], childNodes }
     }
 
@@ -232,8 +232,6 @@ export class Parser {
         return this.parseText(token.value)
       case TokenTypes.Pipe:
         return this.parseText(token.value)
-      case TokenTypes.CustomID:
-        return this.parseText(token.value)
       case TokenTypes.Bang:
         if (this.currentToken.children.length <= 0 || this.currentToken.children[0].type !== TokenTypes.OpenBracket) {
           return this.parseText(token.value)
@@ -276,11 +274,6 @@ export class Parser {
     let textContent = ""
 
     while (currentToken.kind === TokenKinds.Inline) {
-      if (currentToken.type === TokenTypes.CustomID && children.length <= 0) {
-        attrs.push([currentToken.value.slice(1, -1)])
-        break
-      }
-
       const node = this.parseInline(currentToken)
       textContent += node.textContent
       childNodes.push(node)
@@ -294,15 +287,14 @@ export class Parser {
 
   private parseBlockquotes(): Node {
     const childNodes: Node[] = []
+    const currentToken = this.currentToken
 
-    const currentToken: Token = this.currentToken
     while (true) {
       this.currentTokens = currentToken.children
       if (this.currentTokens.length <= 0) break
       this.currentToken = this.currentTokens.shift()
 
       if (this.currentToken.type === TokenTypes.Blankline) continue
-
       childNodes.push(this.parseBlock())
     }
 
@@ -316,36 +308,56 @@ export class Parser {
   }
 
   private parseListItems(): Node[] {
-    const listItems: Node[] = []
     const currentListType = this.currentToken.type
+    const currentListLvl = this.currentToken.spacesLength / 2
+    const currentTokens = this.currentTokens
+    const listItems: Node[] = []
 
     while (true) {
       const parsedChildren = this.parseChildren(this.currentToken.children)
 
-      listItems.push({
+      const paragraph: Node = {
         kind: NodeKinds.Block,
-        type: NodeTypes.ListItem,
+        type: NodeTypes.Paragraph,
         textContent: parsedChildren.textContent,
-        attrs: [],
-        childNodes: parsedChildren.childNodes
-      })
-
-      if (this.currentTokens.length <= 0) break
-
-      let nextToken = this.currentTokens[0]
-      if (nextToken.type === TokenTypes.OrderedList || nextToken.type === TokenTypes.UnorderedList) {
-        // handle nested list
-        if (nextToken.spacesLength / 2 > this.currentToken.spacesLength / 2) {
-          this.currentToken = this.currentTokens.shift()
-          listItems.push(this.parseBlock())
-
-          if (this.currentTokens.length <= 0) break
-          nextToken = this.tokens[0]
-        }
+        childNodes: parsedChildren.childNodes,
+        attrs: []
       }
 
+      const listItem: Node = {
+        kind: NodeKinds.Block,
+        type: NodeTypes.ListItem,
+        textContent: "",
+        attrs: [],
+        childNodes: [paragraph]
+      }
+
+      listItems.push(listItem)
+
+      if (currentTokens.length <= 0) break
+      let nextToken = new Token()
+
+      while (true) {
+        if (currentTokens.length <= 0) break
+        nextToken = currentTokens[0]
+
+        if (nextToken.type === TokenTypes.Blankline) {
+          currentTokens.shift()
+          continue
+        }
+
+        if (nextToken.spacesLength / 2 <= currentListLvl) break
+        this.currentToken = currentTokens.shift()
+
+        listItem.childNodes.push(this.parseBlock())
+      }
+
+
+      if (currentTokens.length <= 0) break
+      nextToken = currentTokens[0]
+
       if (nextToken.type !== currentListType) break
-      this.currentToken = this.currentTokens.shift()
+      this.currentToken = currentTokens.shift()
     }
 
     return listItems
@@ -353,6 +365,7 @@ export class Parser {
 
   private parseList(): Node {
     const isOrdered = this.currentToken.type === TokenTypes.OrderedList
+    // @ts-ignore
     const startFrom = u8.parse(this.currentToken.value[0]).toString()
 
     return {
@@ -441,6 +454,7 @@ export class Parser {
 
       while (true) {
         if (currentToken.type === TokenTypes.Text) {
+          // @ts-ignore
           const firstchar = currentToken.value[0]
           const lastchar = currentToken.value.at(-1)
           const firstlastchar = firstchar + lastchar
@@ -449,6 +463,7 @@ export class Parser {
             let bool = true
             let i = 1
             while (i < currentToken.value.length - 1) {
+              // @ts-ignore
               if (currentToken.value[i] !== "-") bool = false
               i++
             }

@@ -5,38 +5,16 @@ import { tokenize, TokenKinds, TokenTypes } from "../build/debug.js"
 import type { Token } from "../assembly/tokenizer/token"
 
 describe("lexer", async () => {
-  it("should tokenize heading, paragraph and text", () => {
-    const src = dedent`
-      # heading1
-      this is a paragraph
-    `
+  it("should tokenize paragraph and text", () => {
+    const src = "this is a paragraph"
 
     const tokens = tokenize(src)
 
-    const expectedHeading: Token = {
-      kind: TokenKinds.Block,
-      type: TokenTypes.Heading,
-      value: "# ",
-      line: 1,
-      column: 1,
-      spacesLength: 0,
-      children: [
-        {
-          kind: TokenKinds.Inline,
-          type: TokenTypes.Text,
-          value: "heading1",
-          line: 1,
-          column: 3,
-          spacesLength: 0,
-          children: []
-        }
-      ]
-    }
     const expectedParagraph: Token = {
       kind: TokenKinds.Block,
       type: TokenTypes.Paragraph,
       value: "",
-      line: 2,
+      line: 1,
       column: 1,
       spacesLength: 0,
       children: [
@@ -44,32 +22,14 @@ describe("lexer", async () => {
           kind: TokenKinds.Inline,
           type: TokenTypes.Text,
           value: "this is a paragraph",
-          line: 2,
+          line: 1,
           column: 1,
           spacesLength: 0,
           children: []
         }
       ]
     }
-    const expectedResult = [expectedHeading, expectedParagraph]
-    expect(tokens).toEqual(expectedResult)
-  })
-
-  it("should tokenize custom id", () => {
-    const src = "# heading {#custom-id}"
-
-    const tokens = tokenize(src)
-
-    const expectedResult: Token = {
-      kind: TokenKinds.Inline,
-      type: TokenTypes.CustomID,
-      value: "{#custom-id}",
-      line: 1,
-      column: 11,
-      spacesLength: 0,
-      children: []
-    }
-    expect(tokens[0].children).toContainEqual(expectedResult)
+    expect(tokens).toEqual([expectedParagraph])
   })
 
   it("should tokenize blockquotes", () => {

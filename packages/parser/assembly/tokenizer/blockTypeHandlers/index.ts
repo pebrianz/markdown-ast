@@ -3,17 +3,21 @@ import { Token, TokenKinds, TokenTypes } from "../token"
 export const blockTypeHandlers = new Map<string, (text: string, line: i32, column: i32, spaceslength: i32) => Token>()
 
 blockTypeHandlers.set("#", (text, line, column, spacesLength) => {
-  let mark: string = ""
+  // @ts-ignore
+  let mark = text[0]
   let i: u8 = 0
 
-  while (text[i] === "#") {
+  // @ts-ignore
+  while (text[++i] === "#") {
+    // @ts-ignore
     mark += text[i]
-    i++
   }
 
-  if (mark.length > 6 || text[i] !== " ") return new Token()
+  // @ts-ignore
+  const char = text[i]
 
-  mark += text[i]
+  if (mark.length > 6 || char !== " ") return new Token()
+  mark += char
 
   return {
     kind: TokenKinds.Block,
@@ -23,18 +27,19 @@ blockTypeHandlers.set("#", (text, line, column, spacesLength) => {
   }
 })
 
-blockTypeHandlers.set(">", (text, line, column, spaceLength) => {
+blockTypeHandlers.set(">", (text, line, column, spacesLength) => {
+  // @ts-ignore
   let mark = text[0]
-
-  if (text.length >= 2 && text[1] !== " ") return new Token()
-
+  // @ts-ignore
+  if (text.length > 1 && text[1] !== " ") return new Token()
+  // @ts-ignore
   mark += text[1]
 
   return {
     kind: TokenKinds.Block,
     type: TokenTypes.Blockquotes,
     value: mark,
-    line, column, spacesLength: 0, children: []
+    line, column, spacesLength, children: []
   }
 })
 
@@ -50,16 +55,21 @@ blockTypeHandlers.set("|", (text, line, column, spacesLength) => {
 })
 
 blockTypeHandlers.set("-", (text, line, column, spacesLength) => {
+  // @ts-ignore
   let mark = text[0]
   let i = 0
   let isHorizontalRule = true
+
   while (++i < text.length) {
-    if (text[i] !== "-") {
+    // @ts-ignore
+    const char = text[i]
+
+    if (char !== "-") {
       isHorizontalRule = false
       break
     }
 
-    mark += text[i]
+    mark += char
   }
 
   if (isHorizontalRule && mark.length >= 3) return {
@@ -69,19 +79,25 @@ blockTypeHandlers.set("-", (text, line, column, spacesLength) => {
     line, column, spacesLength, children: []
   }
 
-  if (text[1] !== " ") return new Token()
+  // @ts-ignore
+  if (text.length > 1 && text[1] !== " ") return new Token()
+  // @ts-ignore
+  mark += text[1]
 
   return {
     kind: TokenKinds.Block,
     type: TokenTypes.UnorderedList,
-    value: text[0] + text[1],
+    value: mark,
     line, column, spacesLength, children: []
   }
 })
 
 blockTypeHandlers.set("number", (text, line, column, spacesLength) => {
+  // @ts-ignore
   let mark = text[0]
   let i = 0
+
+  // @ts-ignore
   while (++i <= 2) { mark += text[i] }
 
   if (mark.length !== 3 || mark[1] !== "." || mark[2] !== " ") return new Token()
@@ -94,13 +110,16 @@ blockTypeHandlers.set("number", (text, line, column, spacesLength) => {
   }
 })
 
-
 blockTypeHandlers.set("`", (text, line, column, spacesLength) => {
+  // @ts-ignore
   let mark = text[0]
   let i = 0
   while (++i < text.length) {
-    if (mark.length < 3 && text[i] !== "`") return new Token()
-    mark += text[i]
+    // @ts-ignore
+    const char = text[i]
+
+    if (mark.length < 3 && char !== "`") return new Token()
+    mark += char
   }
 
   if (mark.length < 3) return new Token()

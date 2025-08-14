@@ -1,10 +1,12 @@
 import { blockTypeHandlers } from "./blockTypeHandlers"
 import { inlineTypeHandlers } from "./inlineTypeHandlers"
 
+// biome-ignore lint/style/useImportType:
 import { Token, TokenKinds, TokenTypes } from "./token"
 
 export class Tokenizer {
   private lines: string[] = []
+  // biome-ignore lint/style/noInferrableTypes:
   private currentLine: string = ''
   private currentLineNumber: i32 = 0
 
@@ -20,22 +22,26 @@ export class Tokenizer {
     }
   }
 
-  private tokenizeInline(src: string, column: i32): Token[] {
+  private tokenizeInline(line: string, column: i32): Token[] {
     const tokens: Token[] = []
 
     let i = 0
     let text = ""
 
-    while (src[i] !== '') {
-      if (src[i] === "\\") {
-        text += src[i + 1]
+    // @ts-ignore
+    while (line[i] !== '') {
+      // @ts-ignore
+      if (line[i] === "\\") {
+        // @ts-ignore
+        text += line[i + 1]
         i += 2
       }
 
-      const key = src[i]
+      // @ts-ignore
+      const key = line[i]
       if (inlineTypeHandlers.has(key)) {
         const handler = inlineTypeHandlers.get(key)
-        const inlineToken = handler(src.slice(i), this.currentLineNumber, column + i, 0)
+        const inlineToken = handler(line.slice(i), this.currentLineNumber, column + i, 0)
 
         if (inlineToken.kind !== TokenKinds.Undefined) {
           if (text.length > 0) {
@@ -58,7 +64,8 @@ export class Tokenizer {
         }
       }
 
-      text += src[i]
+      // @ts-ignore
+      text += line[i]
       i++
     }
 
@@ -76,10 +83,10 @@ export class Tokenizer {
   }
 
   private tokenizeBlock(line: string, _column: i32 = 0): Token {
-    const trimed: string = line.trimStart()
-    const spacesLength: i32 = line.slice(1, -trimed.length).length
+    const trimed = line.trimStart()
+    const spacesLength = line.slice(0, -trimed.length).length
 
-    let column: i32 = spacesLength + 1 + _column
+    let column = spacesLength + 1 + _column
 
     if (trimed.length < 1) return {
       kind: TokenKinds.Block,
@@ -101,6 +108,7 @@ export class Tokenizer {
       children: []
     }
 
+    // @ts-ignore
     const key = u8.parse(trimed[0]) === 0 ? trimed[0] : "number"
     if (blockTypeHandlers.has(key)) {
       const handler = blockTypeHandlers.get(key)
@@ -131,13 +139,15 @@ export class Tokenizer {
         token.children.push(this.tokenizeBlock(trimed.slice(token.value.length), column - 1))
 
         if (this.lines.length <= 0) return token
-        let key: string = this.lines[0].trimStart()[0]
+        // @ts-ignore
+        let key = this.lines[0].trimStart()[0]
 
         while (key === '>') {
           this.advance()
           token.children = token.children.concat(this.tokenizeBlock(this.currentLine).children)
 
           if (this.lines.length <= 0) break
+          // @ts-ignore
           key = this.lines[0].trimStart()[0]
         }
 

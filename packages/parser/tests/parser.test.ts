@@ -47,28 +47,6 @@ describe("parser", async () => {
     expect(ast.childNodes).toEqual([expectedHeading, expectedParagraph])
   })
 
-  it("should parse heading id", () => {
-    const src = "# heading {#custom-id}"
-
-    const tokens = tokenize(src)
-    const ast = parse(tokens)
-
-    const expectedResult: Node = {
-      kind: NodeKinds.Block,
-      type: NodeTypes.Heading,
-      textContent: 'heading ',
-      attrs: [["#custom-id"]],
-      childNodes: [{
-        kind: NodeKinds.Inline,
-        type: NodeTypes.Text,
-        textContent: "heading ",
-        childNodes: [],
-        attrs: []
-      }]
-    }
-    expect(ast.childNodes).toEqual([expectedResult])
-  })
-
   it.each([["*"]])("should parse bold italic", (mark) => {
     const src = `${mark}italic${mark} ${mark + mark}bold${mark + mark} ${mark + mark + mark}italicbold${mark + mark + mark}`
 
