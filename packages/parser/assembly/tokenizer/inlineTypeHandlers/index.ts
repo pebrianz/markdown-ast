@@ -25,12 +25,29 @@ inlineTypeHandlers.set("*", (text, line, column, spacesLength) => {
 })
 
 inlineTypeHandlers.set("`", (text, line, column, spacesLength) => {
+  // @ts-ignore
+  let value = text[0]
+
+  let i = 0
+  while (++i < text.length) {
+    // @ts-ignore
+    const char = text[i]
+
+    if (char === "\\") {
+      // @ts-ignore
+      value += char + text[++i]
+      continue
+    }
+
+    value += char
+
+    if (char === "`") break
+  }
+
   return {
     kind: TokenKinds.Inline,
-    type: TokenTypes.Backtick,
-    // @ts-ignore
-    value: text[0],
-    line, column, spacesLength, children: []
+    type: TokenTypes.Code,
+    value, line, column, spacesLength, children: []
   }
 })
 

@@ -21,7 +21,6 @@ export enum TokenTypes {
   Asterisk = 51,
   Code = 52,
   Pipe = 53,
-  Backtick = 55,
   Bang = 56,
   OpenBracket = 57,
   CloseBracket = 58,

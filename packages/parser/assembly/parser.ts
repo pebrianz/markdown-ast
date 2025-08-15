@@ -62,24 +62,6 @@ export class Parser {
     }
   }
 
-  private parseCode(): Node {
-    const children = this.currentToken.children
-
-    if (children.length <= 0) return { kind: NodeKinds.Inline, type: NodeTypes.Code, textContent: '', childNodes: [], attrs: [] }
-
-    let currentToken = children.shift()
-    let textContent = ""
-
-    while (currentToken.type !== TokenTypes.Backtick) {
-      textContent += currentToken.value
-
-      if (children.length <= 0) break
-      currentToken = children.shift()
-    }
-
-    return { kind: NodeKinds.Inline, type: NodeTypes.Code, textContent, childNodes: [], attrs: [] }
-  }
-
   parseBlockItalic(type: TokenTypes, markLength: i32): Node {
     const children = this.currentToken.children
 
@@ -186,6 +168,30 @@ export class Parser {
     }
   }
 
+  private parseCode(value: string): Node {
+    // @ts-ignore
+    let textContent = value[1]
+
+    let i = 1
+    while (++i < value.length) {
+      // @ts-ignore
+      const char = value[i]
+
+      if (char === "`") break
+
+      if (char === "\\") {
+        // @ts-ignore
+        textContent += value[++i]
+        continue
+      }
+
+      // @ts-ignore
+      textContent += char
+    }
+
+    return { kind: NodeKinds.Inline, type: NodeTypes.Code, textContent, childNodes: [], attrs: [] }
+  }
+
   private parseWrapedInline(tokenType: TokenTypes, nodeType: NodeTypes): Node {
     const children = this.currentToken.children
 
@@ -218,8 +224,8 @@ export class Parser {
         return this.parseWrapedInline(TokenTypes.EqualEqual, NodeTypes.Highlight)
       case TokenTypes.TildeTilde:
         return this.parseWrapedInline(TokenTypes.TildeTilde, NodeTypes.Strikethrough)
-      case TokenTypes.Backtick:
-        return this.parseCode()
+      case TokenTypes.Code:
+        return this.parseCode(token.value)
       case TokenTypes.OpenBracket:
         return this.parseLink()
       case TokenTypes.CloseBracket:

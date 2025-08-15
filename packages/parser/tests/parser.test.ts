@@ -112,19 +112,29 @@ describe("parser", async () => {
   })
 
   it("should parse code", () => {
-    const src = "this is `code **hello** world`"
+    const src = "`code \\` **hello** world` and text"
 
     const tokens = tokenize(src)
     const ast = parse(tokens)
 
-    const expectedCode: Node = {
-      kind: NodeKinds.Inline,
-      type: NodeTypes.Code,
-      textContent: 'code **hello** world',
-      childNodes: [],
-      attrs: []
-    }
-    expect(ast.childNodes[0].childNodes).toContainEqual(expectedCode)
+    const expectedResult: Node[] = [
+      {
+        kind: NodeKinds.Inline,
+        type: NodeTypes.Code,
+        textContent: 'code ` **hello** world',
+        childNodes: [],
+        attrs: []
+      },
+      {
+        kind: NodeKinds.Inline,
+        type: NodeTypes.Text,
+        textContent: ' and text',
+        childNodes: [],
+        attrs: []
+      }
+    ]
+
+    expect(ast.childNodes[0].childNodes).toEqual(expectedResult)
   })
 
   it("should parse table", () => {
