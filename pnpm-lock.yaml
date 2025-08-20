@@ -23,6 +23,9 @@ importers:
       '@eslint/js':
         specifier: ^9.29.0
         version: 9.31.0
+      '@stylistic/eslint-plugin-ts':
+        specifier: ^4.4.1
+        version: 4.4.1(eslint@9.31.0)(typescript@5.8.3)
       '@types/node':
         specifier: ^24.0.4
         version: 24.0.15
@@ -46,13 +49,14 @@ importers:
         version: 3.2.4(@types/node@24.0.15)(happy-dom@18.0.1)
 
   packages/parser:
+    dependencies:
+      assemblyscript:
+        specifier: ^0.28.4
+        version: 0.28.4
     devDependencies:
       '@types/node':
         specifier: ^24.0.4
         version: 24.0.15
-      assemblyscript:
-        specifier: ^0.28.2
-        version: 0.28.3
       dedent:
         specifier: ^1.6.0
         version: 1.6.0
@@ -561,6 +565,12 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@stylistic/eslint-plugin-ts@4.4.1':
+    resolution: {integrity: sha512-2r6cLcmdF6til66lx8esBYvBvsn7xCmLT50gw/n1rGGlTq/OxeNjBIh4c3VEaDGMa/5TybrZTia6sQUHdIWx1w==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      eslint: '>=9.0.0'
+
   '@types/chai@5.2.2':
     resolution: {integrity: sha512-8kB30R7Hwqf40JPiKhVzodJs2Qc1ZJ5zuT3uzw5Hq/dhNCl3G3l83jfpdI1e20BP348+fV7VIL/+FxaXkqBmWg==}
 
@@ -719,8 +729,8 @@ packages:
     resolution: {integrity: sha512-HGyxoOTYUyCM6stUe6EJgnd4EoewAI7zMdfqO+kGjnlZmBDz/cR5pf8r/cR4Wq60sL/p0IkcjUEEPwS3GFrIyw==}
     engines: {node: '>=8'}
 
-  assemblyscript@0.28.3:
-    resolution: {integrity: sha512-ue5ONQ0D+9yTTFWaw3u8dVBsKoSFCWI7XDoBPj+Vlmcm7PrnCZ1EjApZ+Y8iAMzdRjQ0aONkO4Xt3aAutG/izQ==}
+  assemblyscript@0.28.4:
+    resolution: {integrity: sha512-FHJ1Sm+d1siK6J+sqNUXsl9h9lzSQbnhZxG4X4Vp7LmlwD3DRvW0uk4rB4ekisw0XhrPaIKaFDqkjo1bpHzM6w==}
     engines: {node: '>=20', npm: '>=10'}
     hasBin: true
 
@@ -2222,6 +2232,16 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.45.1':
     optional: true
 
+  '@stylistic/eslint-plugin-ts@4.4.1(eslint@9.31.0)(typescript@5.8.3)':
+    dependencies:
+      '@typescript-eslint/utils': 8.37.0(eslint@9.31.0)(typescript@5.8.3)
+      eslint: 9.31.0
+      eslint-visitor-keys: 4.2.1
+      espree: 10.4.0
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+
   '@types/chai@5.2.2':
     dependencies:
       '@types/deep-eql': 4.0.2
@@ -2414,7 +2434,7 @@ snapshots:
 
   array-union@2.1.0: {}
 
-  assemblyscript@0.28.3:
+  assemblyscript@0.28.4:
     dependencies:
       binaryen: 123.0.0-nightly.20250530
       long: 5.3.2

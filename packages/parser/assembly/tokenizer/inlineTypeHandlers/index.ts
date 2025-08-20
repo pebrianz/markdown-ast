@@ -1,184 +1,191 @@
-import { Token, TokenKinds, TokenTypes } from "../token"
+import { Token, TokenTypes } from "../token";
 
-export const inlineTypeHandlers = new Map<string, (text: string, line: i32, column: i32, spaceslength: i32) => Token>()
+export const inlineTypeHandlers = new Map<
+	string,
+	(text: string, line: u16, column: u16, spaceslength: u8) => Token | null
+>();
 
-/* eslint-disable */
 inlineTypeHandlers.set("*", (text, line, column, spacesLength) => {
-  // @ts-ignore
-  let mark = text[0]
-  let i = 0
+	let mark = text.charAt(0);
+	let i: u16 = 0;
 
-  // @ts-ignore
-  while (text[++i] === "*") {
-    // @ts-ignore
-    mark += text[i]
-  }
+	while (text.charAt(++i) === "*") {
+		mark += text.charAt(i);
+	}
 
-  if (mark.length > 3) return new Token()
+	if (mark.length > 3) return null;
 
-  return {
-    kind: TokenKinds.Inline,
-    type: TokenTypes.Asterisk,
-    value: mark,
-    line, column, spacesLength, children: []
-  }
-})
+	return {
+		type: TokenTypes.Asterisk,
+		value: mark,
+		line,
+		column,
+		spacesLength,
+		children: [],
+	};
+});
 
 inlineTypeHandlers.set("`", (text, line, column, spacesLength) => {
-  // @ts-ignore
-  let value = text[0]
+	let value = text.charAt(0);
+	let i = 0;
 
-  let i = 0
-  while (++i < text.length) {
-    // @ts-ignore
-    const char = text[i]
+	while (++i < text.length) {
+		if (text.charAt(i) === "\\") {
+			value += text.charAt(i) + text.charAt(++i);
+			continue;
+		}
 
-    if (char === "\\") {
-      // @ts-ignore
-      value += char + text[++i]
-      continue
-    }
+		value += text.charAt(i);
 
-    value += char
+		if (text.charAt(i) === "`") break;
+	}
 
-    if (char === "`") break
-  }
-
-  return {
-    kind: TokenKinds.Inline,
-    type: TokenTypes.Code,
-    value, line, column, spacesLength, children: []
-  }
-})
+	return {
+		type: TokenTypes.Code,
+		value,
+		line,
+		column,
+		spacesLength,
+		children: [],
+	};
+});
 
 inlineTypeHandlers.set("|", (text, line, column, spacesLength) => {
-  return {
-    kind: TokenKinds.Inline,
-    type: TokenTypes.Pipe,
-    // @ts-ignore
-    value: text[0],
-    line, column, spacesLength, children: []
-  }
-})
+	return {
+		type: TokenTypes.Pipe,
+		value: text.charAt(0),
+		line,
+		column,
+		spacesLength,
+		children: [],
+	};
+});
 
 inlineTypeHandlers.set("!", (text, line, column, spacesLength) => {
-  return {
-    kind: TokenKinds.Inline,
-    type: TokenTypes.Bang,
-    // @ts-ignore
-    value: text[0],
-    line, column, spacesLength, children: []
-  }
-})
+	return {
+		type: TokenTypes.Bang,
+		value: text.charAt(0),
+		line,
+		column,
+		spacesLength,
+		children: [],
+	};
+});
 
 inlineTypeHandlers.set("[", (text, line, column, spacesLength) => {
-  return {
-    kind: TokenKinds.Inline,
-    type: TokenTypes.OpenBracket,
-    // @ts-ignore
-    value: text[0],
-    line, column, spacesLength, children: []
-  }
-})
+	return {
+		type: TokenTypes.OpenBracket,
+		value: text.charAt(0),
+		line,
+		column,
+		spacesLength,
+		children: [],
+	};
+});
 
 inlineTypeHandlers.set("]", (text, line, column, spacesLength) => {
-  return {
-    kind: TokenKinds.Inline,
-    type: TokenTypes.CloseBracket,
-    // @ts-ignore
-    value: text[0],
-    line, column, spacesLength, children: []
-  }
-})
+	return {
+		type: TokenTypes.CloseBracket,
+		value: text.charAt(0),
+		line,
+		column,
+		spacesLength,
+		children: [],
+	};
+});
 
 inlineTypeHandlers.set("(", (text, line, column, spacesLength) => {
-  // @ts-ignore
-  let value = text[0]
-  let i = 0
+	let value = text.charAt(0);
+	let i = 0;
 
-  while (++i < text.length) {
-    // @ts-ignore
-    const char = text[i]
-    value += char
-    if (char === ")") break
-  }
+	while (++i < text.length) {
+		value += text.charAt(i);
 
-  if (value[value.length - 1] !== ')') return new Token()
+		if (text.charAt(i) === ")") break;
+	}
 
-  return {
-    kind: TokenKinds.Inline,
-    type: TokenTypes.LinkURL,
-    value, line, column, spacesLength, children: []
-  }
-})
+	if (value.charAt(value.length - 1) !== ")") return null;
+
+	return {
+		type: TokenTypes.LinkURL,
+		value,
+		line,
+		column,
+		spacesLength,
+		children: [],
+	};
+});
 
 inlineTypeHandlers.set("<", (text, line, column, spacesLength) => {
-  // @ts-ignore
-  let value = text[0]
+	let value = text.charAt(0);
 
-  // @ts-ignore
-  if (text.length < 2 || text[1] === " ") return new Token()
+	if (text.length < 2 || text.charAt(1) === " ") return null;
+	let i = 0;
 
-  let i = 0
-  while (++i < text.length) {
-    // @ts-ignore
-    const char = text[i]
+	while (++i < text.length) {
+		const char = text.charAt(i);
 
-    if (char === " ") return new Token()
-    value += char
+		if (char === " ") return null;
+		value += char;
 
-    if (char === ">") break
-  }
+		if (char === ">") break;
+	}
 
-  if (value[value.length - 1] !== '>') return new Token()
+	if (value.charAt(value.length - 1) !== ">") return null;
 
-  return {
-    kind: TokenKinds.Inline,
-    type: TokenTypes.URL,
-    value, line, column, spacesLength, children: []
-  }
-})
+	return {
+		type: TokenTypes.URL,
+		value,
+		line,
+		column,
+		spacesLength,
+		children: [],
+	};
+});
 
 inlineTypeHandlers.set(":", (text, line, column, spacesLength) => {
-  // @ts-ignore
-  if (text.length < 2 || text[1] !== " ") return new Token()
+	if (text.length < 2 || text.charAt(1) !== " ") return null;
 
-  return {
-    kind: TokenKinds.Inline,
-    type: TokenTypes.ColonWithSpace,
-    // @ts-ignore
-    value: text[0] + text[1], line, column, spacesLength, children: []
-  }
-})
+	return {
+		type: TokenTypes.ColonWithSpace,
+		value: text.charAt(0) + text.charAt(1),
+		line,
+		column,
+		spacesLength,
+		children: [],
+	};
+});
 
 inlineTypeHandlers.set("=", (text, line, column, spacesLength) => {
-  // @ts-ignore
-  let mark = text[0]
+	let mark = text.charAt(0);
+	const secondChar = text.charAt(1);
 
-  // @ts-ignore
-  if (text.length > 1 && text[1] !== "=") return new Token()
-  // @ts-ignore
-  mark += text[1]
+	if (text.length > 1 && secondChar !== "=") return null;
+	mark += secondChar;
 
-  return {
-    kind: TokenKinds.Inline,
-    type: TokenTypes.EqualEqual,
-    value: mark, line, column, spacesLength, children: []
-  }
-})
+	return {
+		type: TokenTypes.EqualEqual,
+		value: mark,
+		line,
+		column,
+		spacesLength,
+		children: [],
+	};
+});
 
 inlineTypeHandlers.set("~", (text, line, column, spacesLength) => {
-  // @ts-ignore
-  let mark = text[0]
+	let mark = text.charAt(0);
+	const secondChar = text.charAt(1);
 
-  // @ts-ignore
-  if (text.length > 1 && text[1] !== "~") return new Token()
-  // @ts-ignore
-  mark += text[1]
+	if (text.length > 1 && secondChar !== "~") return null;
+	mark += secondChar;
 
-  return {
-    kind: TokenKinds.Inline,
-    type: TokenTypes.TildeTilde,
-    value: mark, line, column, spacesLength, children: []
-  }
-})
+	return {
+		type: TokenTypes.TildeTilde,
+		value: mark,
+		line,
+		column,
+		spacesLength,
+		children: [],
+	};
+});

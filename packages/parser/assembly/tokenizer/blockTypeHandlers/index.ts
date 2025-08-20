@@ -1,133 +1,140 @@
-import { Token, TokenKinds, TokenTypes } from "../token"
+import { Token, TokenTypes } from "../token";
 
-export const blockTypeHandlers = new Map<string, (text: string, line: i32, column: i32, spaceslength: i32) => Token>()
+export const blockTypeHandlers = new Map<
+	string,
+	(text: string, line: u16, column: u16, spaceslength: u8) => Token | null
+>();
 
 blockTypeHandlers.set("#", (text, line, column, spacesLength) => {
-  // @ts-ignore
-  let mark = text[0]
-  let i: u8 = 0
+	let mark = text.charAt(0);
+	let i: u16 = 0;
 
-  // @ts-ignore
-  while (text[++i] === "#") {
-    // @ts-ignore
-    mark += text[i]
-  }
+	while (text.charAt(++i) === "#") {
+		mark += text.charAt(i);
+	}
 
-  // @ts-ignore
-  const char = text[i]
+	if (mark.length > 6 || text.charAt(i) !== " ") return null;
+	mark += text.charAt(i);
 
-  if (mark.length > 6 || char !== " ") return new Token()
-  mark += char
-
-  return {
-    kind: TokenKinds.Block,
-    type: TokenTypes.Heading,
-    value: mark,
-    line, column, spacesLength, children: []
-  }
-})
+	return {
+		type: TokenTypes.Heading,
+		value: mark,
+		line,
+		column,
+		spacesLength,
+		children: [],
+	};
+});
 
 blockTypeHandlers.set(">", (text, line, column, spacesLength) => {
-  // @ts-ignore
-  let mark = text[0]
-  // @ts-ignore
-  if (text.length > 1 && text[1] !== " ") return new Token()
-  // @ts-ignore
-  mark += text[1]
+	let mark = text.charAt(0);
 
-  return {
-    kind: TokenKinds.Block,
-    type: TokenTypes.Blockquotes,
-    value: mark,
-    line, column, spacesLength, children: []
-  }
-})
+	if (text.length > 1 && text.charAt(1) !== " ") return null;
+	mark += text.charAt(1);
+
+	return {
+		type: TokenTypes.Blockquotes,
+		value: mark,
+		line,
+		column,
+		spacesLength,
+		children: [],
+	};
+});
 
 blockTypeHandlers.set("|", (text, line, column, spacesLength) => {
-  if (!text.startsWith("|")) return new Token()
+	if (!(text.charAt(0) === "|")) return null;
 
-  return {
-    kind: TokenKinds.Block,
-    type: TokenTypes.TableRow,
-    value: "",
-    line, column, spacesLength, children: []
-  }
-})
+	return {
+		type: TokenTypes.TableRow,
+		value: "",
+		line,
+		column,
+		spacesLength,
+		children: [],
+	};
+});
 
 blockTypeHandlers.set("-", (text, line, column, spacesLength) => {
-  // @ts-ignore
-  let mark = text[0]
-  let i = 0
-  let isHorizontalRule = true
+	let mark = text.charAt(0);
+	let i = 0;
+	let isHorizontalRule = true;
 
-  while (++i < text.length) {
-    // @ts-ignore
-    const char = text[i]
+	while (++i < text.length) {
+		if (text.charAt(i) !== "-") {
+			isHorizontalRule = false;
+			break;
+		}
 
-    if (char !== "-") {
-      isHorizontalRule = false
-      break
-    }
+		mark += text.charAt(i);
+	}
 
-    mark += char
-  }
+	if (isHorizontalRule && mark.length >= 3)
+		return {
+			type: TokenTypes.HorizontalRule,
+			value: mark,
+			line,
+			column,
+			spacesLength,
+			children: [],
+		};
 
-  if (isHorizontalRule && mark.length >= 3) return {
-    kind: TokenKinds.Block,
-    type: TokenTypes.HorizontalRule,
-    value: mark,
-    line, column, spacesLength, children: []
-  }
+	if (text.charAt(1) !== " ") return null;
+	mark += text.charAt(1);
 
-  // @ts-ignore
-  if (text.length > 1 && text[1] !== " ") return new Token()
-  // @ts-ignore
-  mark += text[1]
-
-  return {
-    kind: TokenKinds.Block,
-    type: TokenTypes.UnorderedList,
-    value: mark,
-    line, column, spacesLength, children: []
-  }
-})
+	return {
+		type: TokenTypes.UnorderedList,
+		value: mark,
+		line,
+		column,
+		spacesLength,
+		children: [],
+	};
+});
 
 blockTypeHandlers.set("number", (text, line, column, spacesLength) => {
-  // @ts-ignore
-  let mark = text[0]
-  let i = 0
+	let mark = text.charAt(0);
+	let i: u8 = 0;
 
-  // @ts-ignore
-  while (++i <= 2) { mark += text[i] }
+	while (++i <= 2) {
+		mark += text.charAt(i);
+	}
 
-  if (mark.length !== 3 || mark[1] !== "." || mark[2] !== " ") return new Token()
+	if (
+		mark.length !== 3 ||
+		mark.charAt(1) !== "." ||
+		mark.charAt(2) !== " "
+	) {
+		return null;
+	}
 
-  return {
-    kind: TokenKinds.Block,
-    type: TokenTypes.OrderedList,
-    value: mark,
-    line, column, spacesLength, children: []
-  }
-})
+	return {
+		type: TokenTypes.OrderedList,
+		value: mark,
+		line,
+		column,
+		spacesLength,
+		children: [],
+	};
+});
 
 blockTypeHandlers.set("`", (text, line, column, spacesLength) => {
-  // @ts-ignore
-  let mark = text[0]
-  let i = 0
-  while (++i < text.length) {
-    // @ts-ignore
-    const char = text[i]
+	let mark = text.charAt(0);
+	let i = 0;
 
-    if (mark.length < 3 && char !== "`") return new Token()
-    mark += char
-  }
+	while (++i < text.length) {
+		if (mark.length < 3 && text.charAt(i) !== "`") return null;
+		mark += text.charAt(i);
+	}
 
-  if (mark.length < 3) return new Token()
+	if (mark.length < 3) return null;
 
-  return {
-    kind: TokenKinds.Block,
-    type: TokenTypes.Fenced,
-    value: mark,
-    line, column, spacesLength, children: []
-  }
-})
+	return {
+		type: TokenTypes.Fenced,
+		value: mark,
+		line,
+		column,
+		spacesLength,
+		children: [],
+	};
+});

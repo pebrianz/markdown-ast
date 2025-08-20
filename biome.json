@@ -1,0 +1,15 @@
+{
+	"formatter": {
+		"enabled": true,
+		"lineWidth": 75
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"style": {
+				"noInferrableTypes": "off",
+				"useImportType": "info"
+			}
+		}
+	}
+}
