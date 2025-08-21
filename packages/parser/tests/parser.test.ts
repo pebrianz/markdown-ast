@@ -270,7 +270,53 @@ describe("parser", async () => {
 		expect(paragraph.childNodes[1]).toMatchObject(expectedResult);
 	});
 
-	it("should tokenize fenced code block", () => {
+	it("should parse html tag", () => {
+		const src = dedent`
+			<div foo="bar">this is
+			text</div>
+		`;
+
+		const tokens = tokenize(src);
+		const ast = parse(tokens);
+
+		const expected: Node[] = [
+			{
+				type: NodeTypes.Paragraph,
+				textContent: `<div foo="bar">this is`,
+				childNodes: [
+					{
+						type: NodeTypes.HtmlTag,
+						textContent: `<div foo="bar">`,
+						childNodes: [],
+					},
+					{
+						type: NodeTypes.Text,
+						textContent: "this is",
+						childNodes: [],
+					},
+				],
+			},
+			{
+				type: NodeTypes.Paragraph,
+				textContent: "text</div>",
+				childNodes: [
+					{
+						type: NodeTypes.Text,
+						textContent: "text",
+						childNodes: [],
+					},
+					{
+						type: NodeTypes.HtmlTag,
+						textContent: "</div>",
+						childNodes: [],
+					},
+				],
+			},
+		];
+		expect(ast.childNodes).toMatchObject(expected);
+	});
+
+	it("should parse fenced code block", () => {
 		const src = dedent`
       \`\`\`ts
       let a = "hello world"

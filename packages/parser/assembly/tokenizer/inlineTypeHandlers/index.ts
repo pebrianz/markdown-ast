@@ -116,6 +116,20 @@ inlineTypeHandlers.set("(", (text, line, column, spacesLength) => {
 	};
 });
 
+function isAutoLink(text: string): bool {
+	// no spaces allowed in autolink
+	if (text.includes(" ")) return false;
+
+	// starts with URL scheme or looks like email
+	return (
+		text.startsWith("<http://") ||
+		text.startsWith("<https://") ||
+		text.startsWith("<ftp://") ||
+		text.startsWith("<mailto:") ||
+		text.includes("@")
+	); // simple email detection
+}
+
 inlineTypeHandlers.set("<", (text, line, column, spacesLength) => {
 	let value = text.charAt(0);
 
@@ -124,8 +138,6 @@ inlineTypeHandlers.set("<", (text, line, column, spacesLength) => {
 
 	while (++i < text.length) {
 		const char = text.charAt(i);
-
-		if (char === " ") return null;
 		value += char;
 
 		if (char === ">") break;
@@ -133,8 +145,18 @@ inlineTypeHandlers.set("<", (text, line, column, spacesLength) => {
 
 	if (value.charAt(value.length - 1) !== ">") return null;
 
+	if (isAutoLink(value))
+		return {
+			type: TokenTypes.AutoLink,
+			value,
+			line,
+			column,
+			spacesLength,
+			children: [],
+		};
+
 	return {
-		type: TokenTypes.URL,
+		type: TokenTypes.HtmlTag,
 		value,
 		line,
 		column,

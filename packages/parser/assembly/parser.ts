@@ -26,6 +26,7 @@ export enum NodeTypes {
 	LinkReference = 57,
 	Highlight = 58,
 	Strikethrough = 59,
+	HtmlTag = 60,
 }
 
 export class Node {
@@ -178,7 +179,7 @@ export class Parser {
 		return inline.always(createNode(NodeTypes.Text, textContent));
 	}
 
-	private parseURL(value: string): Node {
+	private parseAutoLink(value: string): Node {
 		const url = value.slice(1, -1);
 		const attributes = new Map<string, string>();
 		attributes.set("href", url);
@@ -236,6 +237,10 @@ export class Parser {
 		return inline.always(createNode(nodeType, textContent, childNodes));
 	}
 
+	private parseHtmlTag(value: string): Node {
+		return inline.always(createNode(NodeTypes.HtmlTag, value));
+	}
+
 	private parseInline(token: Token): Node {
 		switch (token.type) {
 			case TokenTypes.Text:
@@ -260,8 +265,10 @@ export class Parser {
 				return this.parseText(token.value);
 			case TokenTypes.LinkURL:
 				return this.parseText(token.value);
-			case TokenTypes.URL:
-				return this.parseURL(token.value);
+			case TokenTypes.AutoLink:
+				return this.parseAutoLink(token.value);
+			case TokenTypes.HtmlTag:
+				return this.parseHtmlTag(token.value);
 			case TokenTypes.ColonWithSpace:
 				return this.parseText(token.value);
 			case TokenTypes.Pipe:

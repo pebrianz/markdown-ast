@@ -19,10 +19,11 @@ export enum TokenTypes {
 	OpenBracket = 57,
 	CloseBracket = 58,
 	LinkURL = 59,
-	URL = 60,
+	AutoLink = 60,
 	ColonWithSpace = 61,
 	EqualEqual = 62,
 	TildeTilde = 63,
+	HtmlTag = 64,
 }
 
 @final
