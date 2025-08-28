@@ -1,42 +1,43 @@
 {
 	"name": "@markdown-ast/parser",
-	"scripts": {
-		"dev": "npm run root:dev --include-workspace-root --if-present",
-		"test": "npm run root:test --include-workspace-root --if-present",
-		"asbuild:debug": "asc assembly/index.ts --target debug",
-		"asbuild:release": "asc assembly/index.ts --target release",
-		"asbuild": "npm run asbuild:debug && npm run asbuild:release",
-		"start": "npx serve ."
-	},
+	"description": "Markdown parser",
+	"license": "MIT",
 	"author": {
 		"email": "pebrianz117@gmail.com",
 		"name": "Pebrian",
 		"url": "https://github.com/pebrianz"
 	},
-	"license": "MIT",
-	"description": "Markdown parser",
 	"homepage": "https://github.com/pebrianz/markdown-ast",
 	"bugs": "https://github.com/pebrianz/markdown-ast/issues",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/pebrianz/markdown-ast.git"
 	},
-	"workspaces": ["packages/*"],
-	"devDependencies": {
-		"@types/node": "^24.0.4",
-		"dedent": "^1.6.0",
-		"tsup": "^8.5.0",
-		"typescript": "^5.8.3",
-		"vitest": "^3.2.4"
-	},
 	"type": "module",
+	"scripts": {
+		"dev": "pnpm -w dev packages/parser",
+		"test:debug": "pnpm -w test:debug packages/parser",
+		"test:release": "pnpm -w test:release packages/parser",
+		"test": "pnpm test:debug && pnpm test:release",
+		"lint": "pnpm -w lint packages/parser",
+		"asbuild:debug": "asc assembly/index.ts --target debug",
+		"asbuild:release": "asc assembly/index.ts --target release",
+		"asbuild": "pnpm asbuild:debug & pnpm asbuild:release"
+	},
+	"files": ["./build", "./assembly"],
 	"exports": {
 		".": {
 			"import": "./build/release.js",
 			"types": "./build/release.d.ts"
-		}
+		},
+		"./build/*": "./build/*",
+		"./assembly/*": "./assembly/*"
 	},
-	"dependencies": {
-		"assemblyscript": "^0.28.4"
+	"devDependencies": {
+		"@types/node": "^24.0.4",
+		"assemblyscript": "^0.28.4",
+		"dedent": "^1.6.0",
+		"typescript": "^5.8.3",
+		"vitest": "^3.2.4"
 	}
 }

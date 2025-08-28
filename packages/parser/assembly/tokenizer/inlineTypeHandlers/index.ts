@@ -1,213 +1,233 @@
-import { Token, TokenTypes } from "../token";
+import {Token, TokenTypes} from '../token';
 
 export const inlineTypeHandlers = new Map<
-	string,
-	(text: string, line: u16, column: u16, spaceslength: u8) => Token | null
+  string,
+  (text: string, line: u16, column: u16, spaceslength: u8) => Token | null
 >();
 
-inlineTypeHandlers.set("*", (text, line, column, spacesLength) => {
-	let mark = text.charAt(0);
-	let i: u16 = 0;
+inlineTypeHandlers.set('*', (text, line, column, spacesLength) => 
+{
+  let mark = text.charAt(0);
+  let i: u16 = 0;
 
-	while (text.charAt(++i) === "*") {
-		mark += text.charAt(i);
-	}
+  while (text.charAt(++i) === '*') 
+  {
+    mark += text.charAt(i);
+  }
 
-	if (mark.length > 3) return null;
+  if (mark.length > 3) return null;
 
-	return {
-		type: TokenTypes.Asterisk,
-		value: mark,
-		line,
-		column,
-		spacesLength,
-		children: [],
-	};
+  return {
+    type: TokenTypes.Asterisk,
+    value: mark,
+    line,
+    column,
+    spacesLength,
+    children: [],
+  };
 });
 
-inlineTypeHandlers.set("`", (text, line, column, spacesLength) => {
-	let value = text.charAt(0);
-	let i = 0;
+inlineTypeHandlers.set('`', (text, line, column, spacesLength) => 
+{
+  const textLength = text.length;
+  let value = text.charAt(0);
+  let i = 0;
 
-	while (++i < text.length) {
-		if (text.charAt(i) === "\\") {
-			value += text.charAt(i) + text.charAt(++i);
-			continue;
-		}
+  while (++i < textLength) 
+  {
+    if (text.charAt(i) === '\\') 
+    {
+      value += text.charAt(i) + text.charAt(++i);
+      continue;
+    }
 
-		value += text.charAt(i);
+    value += text.charAt(i);
 
-		if (text.charAt(i) === "`") break;
-	}
+    if (text.charAt(i) === '`') break;
+  }
 
-	return {
-		type: TokenTypes.Code,
-		value,
-		line,
-		column,
-		spacesLength,
-		children: [],
-	};
+  return {
+    type: TokenTypes.Code,
+    value,
+    line,
+    column,
+    spacesLength,
+    children: [],
+  };
 });
 
-inlineTypeHandlers.set("|", (text, line, column, spacesLength) => {
-	return {
-		type: TokenTypes.Pipe,
-		value: text.charAt(0),
-		line,
-		column,
-		spacesLength,
-		children: [],
-	};
+inlineTypeHandlers.set('|', (text, line, column, spacesLength) => 
+{
+  return {
+    type: TokenTypes.Pipe,
+    value: text.charAt(0),
+    line,
+    column,
+    spacesLength,
+    children: [],
+  };
 });
 
-inlineTypeHandlers.set("!", (text, line, column, spacesLength) => {
-	return {
-		type: TokenTypes.Bang,
-		value: text.charAt(0),
-		line,
-		column,
-		spacesLength,
-		children: [],
-	};
+inlineTypeHandlers.set('!', (text, line, column, spacesLength) => 
+{
+  return {
+    type: TokenTypes.Bang,
+    value: text.charAt(0),
+    line,
+    column,
+    spacesLength,
+    children: [],
+  };
 });
 
-inlineTypeHandlers.set("[", (text, line, column, spacesLength) => {
-	return {
-		type: TokenTypes.OpenBracket,
-		value: text.charAt(0),
-		line,
-		column,
-		spacesLength,
-		children: [],
-	};
+inlineTypeHandlers.set('[', (text, line, column, spacesLength) => 
+{
+  return {
+    type: TokenTypes.OpenBracket,
+    value: text.charAt(0),
+    line,
+    column,
+    spacesLength,
+    children: [],
+  };
 });
 
-inlineTypeHandlers.set("]", (text, line, column, spacesLength) => {
-	return {
-		type: TokenTypes.CloseBracket,
-		value: text.charAt(0),
-		line,
-		column,
-		spacesLength,
-		children: [],
-	};
+inlineTypeHandlers.set(']', (text, line, column, spacesLength) => 
+{
+  return {
+    type: TokenTypes.CloseBracket,
+    value: text.charAt(0),
+    line,
+    column,
+    spacesLength,
+    children: [],
+  };
 });
 
-inlineTypeHandlers.set("(", (text, line, column, spacesLength) => {
-	let value = text.charAt(0);
-	let i = 0;
+inlineTypeHandlers.set('(', (text, line, column, spacesLength) => 
+{
+  const textLength = text.length;
+  let value = text.charAt(0);
+  let i = 0;
 
-	while (++i < text.length) {
-		value += text.charAt(i);
+  while (++i < textLength) 
+  {
+    value += text.charAt(i);
 
-		if (text.charAt(i) === ")") break;
-	}
+    if (text.charAt(i) === ')') break;
+  }
 
-	if (value.charAt(value.length - 1) !== ")") return null;
+  if (value.charAt(value.length - 1) !== ')') return null;
 
-	return {
-		type: TokenTypes.LinkURL,
-		value,
-		line,
-		column,
-		spacesLength,
-		children: [],
-	};
+  return {
+    type: TokenTypes.LinkURL,
+    value,
+    line,
+    column,
+    spacesLength,
+    children: [],
+  };
 });
 
-function isAutoLink(text: string): bool {
-	// no spaces allowed in autolink
-	if (text.includes(" ")) return false;
+function isAutoLink (text: string): bool 
+{
+  // no spaces allowed in autolink
+  if (text.includes(' ')) return false;
 
-	// starts with URL scheme or looks like email
-	return (
-		text.startsWith("<http://") ||
-		text.startsWith("<https://") ||
-		text.startsWith("<ftp://") ||
-		text.startsWith("<mailto:") ||
-		text.includes("@")
-	); // simple email detection
+  // starts with URL scheme or looks like email
+  return (
+    text.startsWith('<http://') ||
+		text.startsWith('<https://') ||
+		text.startsWith('<ftp://') ||
+		text.startsWith('<mailto:') ||
+		text.includes('@')
+  ); // simple email detection
 }
 
-inlineTypeHandlers.set("<", (text, line, column, spacesLength) => {
-	let value = text.charAt(0);
+inlineTypeHandlers.set('<', (text, line, column, spacesLength) => 
+{
+  const textLength = text.length;
+  let value = text.charAt(0);
 
-	if (text.length < 2 || text.charAt(1) === " ") return null;
-	let i = 0;
+  if (textLength < 2 || text.charAt(1) === ' ') return null;
+  let i = 0;
 
-	while (++i < text.length) {
-		const char = text.charAt(i);
-		value += char;
+  while (++i < textLength) 
+  {
+    const char = text.charAt(i);
+    value += char;
 
-		if (char === ">") break;
-	}
+    if (char === '>') break;
+  }
 
-	if (value.charAt(value.length - 1) !== ">") return null;
+  if (value.charAt(value.length - 1) !== '>') return null;
 
-	if (isAutoLink(value))
-		return {
-			type: TokenTypes.AutoLink,
-			value,
-			line,
-			column,
-			spacesLength,
-			children: [],
-		};
+  if (isAutoLink(value))
+    return {
+      type: TokenTypes.AutoLink,
+      value,
+      line,
+      column,
+      spacesLength,
+      children: [],
+    };
 
-	return {
-		type: TokenTypes.HtmlTag,
-		value,
-		line,
-		column,
-		spacesLength,
-		children: [],
-	};
+  return {
+    type: TokenTypes.HtmlTag,
+    value,
+    line,
+    column,
+    spacesLength,
+    children: [],
+  };
 });
 
-inlineTypeHandlers.set(":", (text, line, column, spacesLength) => {
-	if (text.length < 2 || text.charAt(1) !== " ") return null;
+inlineTypeHandlers.set(':', (text, line, column, spacesLength) => 
+{
+  if (text.length < 2 || text.charAt(1) !== ' ') return null;
 
-	return {
-		type: TokenTypes.ColonWithSpace,
-		value: text.charAt(0) + text.charAt(1),
-		line,
-		column,
-		spacesLength,
-		children: [],
-	};
+  return {
+    type: TokenTypes.ColonWithSpace,
+    value: text.charAt(0) + text.charAt(1),
+    line,
+    column,
+    spacesLength,
+    children: [],
+  };
 });
 
-inlineTypeHandlers.set("=", (text, line, column, spacesLength) => {
-	let mark = text.charAt(0);
-	const secondChar = text.charAt(1);
+inlineTypeHandlers.set('=', (text, line, column, spacesLength) => 
+{
+  let mark = text.charAt(0);
+  const secondChar = text.charAt(1);
 
-	if (text.length > 1 && secondChar !== "=") return null;
-	mark += secondChar;
+  if (text.length > 1 && secondChar !== '=') return null;
+  mark += secondChar;
 
-	return {
-		type: TokenTypes.EqualEqual,
-		value: mark,
-		line,
-		column,
-		spacesLength,
-		children: [],
-	};
+  return {
+    type: TokenTypes.EqualEqual,
+    value: mark,
+    line,
+    column,
+    spacesLength,
+    children: [],
+  };
 });
 
-inlineTypeHandlers.set("~", (text, line, column, spacesLength) => {
-	let mark = text.charAt(0);
-	const secondChar = text.charAt(1);
+inlineTypeHandlers.set('~', (text, line, column, spacesLength) => 
+{
+  let mark = text.charAt(0);
+  const secondChar = text.charAt(1);
 
-	if (text.length > 1 && secondChar !== "~") return null;
-	mark += secondChar;
+  if (text.length > 1 && secondChar !== '~') return null;
+  mark += secondChar;
 
-	return {
-		type: TokenTypes.TildeTilde,
-		value: mark,
-		line,
-		column,
-		spacesLength,
-		children: [],
-	};
+  return {
+    type: TokenTypes.TildeTilde,
+    value: mark,
+    line,
+    column,
+    spacesLength,
+    children: [],
+  };
 });

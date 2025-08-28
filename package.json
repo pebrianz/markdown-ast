@@ -1,22 +1,25 @@
 {
 	"name": "markdown-ast",
 	"private": true,
-	"scripts": {
-		"root:dev": "vitest",
-		"root:test": "vitest run"
-	},
+	"license": "MIT",
 	"author": {
 		"email": "pebrianz117@gmail.com",
 		"name": "Pebrian",
 		"url": "https://github.com/pebrianz"
 	},
-	"license": "MIT",
 	"description": "Markdown parser",
 	"homepage": "https://github.com/pebrianz/markdown-ast",
 	"bugs": "https://github.com/pebrianz/markdown-ast/issues",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/pebrianz/markdown-ast.git"
+	},
+	"scripts": {
+		"dev": "TARGET=debug vitest",
+		"test:debug": "TARGET=debug vitest run",
+		"test:release": "TARGET=release vitest run",
+		"test": "pnpm test:debug && pnpm test:release",
+		"lint": "eslint"
 	},
 	"workspaces": [
 		"packages/*"
@@ -25,13 +28,11 @@
 		"@biomejs/biome": "^2.0.5",
 		"@changesets/changelog-github": "^0.5.1",
 		"@changesets/cli": "^2.29.5",
-		"@dotenvx/dotenvx": "^1.48.3",
 		"@eslint/js": "^9.29.0",
-		"@stylistic/eslint-plugin-ts": "^4.4.1",
+		"@stylistic/eslint-plugin": "^5.2.3",
 		"@types/node": "^24.0.4",
 		"eslint": "^9.29.0",
 		"happy-dom": "^18.0.1",
-		"rollup": "^4.45.1",
 		"typescript": "^5.8.3",
 		"typescript-eslint": "^8.35.0",
 		"vitest": "^3.2.4"

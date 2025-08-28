@@ -1,189 +1,208 @@
-import { blockTypeHandlers } from "./blockTypeHandlers";
-import { inlineTypeHandlers } from "./inlineTypeHandlers";
+import {blockTypeHandlers} from './blockTypeHandlers';
+import {inlineTypeHandlers} from './inlineTypeHandlers';
 
-import { Token, TokenTypes } from "./token";
+import {Token, TokenTypes} from './token';
 
 @final
-export class Tokenizer {
-	private lines: string[] = [];
-	private currentLine: string = "";
-	private currentLineNumber: u16 = 0;
+export class Tokenizer 
+{
+  private lines: string[] = [];
 
-	constructor(source: string) {
-		this.lines = source.split("\n");
-	}
+  private currentLine: string = '';
 
-	@inline
-	private nextLine(): string | null {
-		if (this.lines.length <= 0) return null;
-		this.currentLine = this.lines.shift();
-		this.currentLineNumber++;
+  private currentLineNumber: u16 = 0;
 
-		return this.currentLine;
-	}
+  constructor (source: string) 
+  {
+    this.lines = source.split('\n');
+  }
 
-	private tokenizeInline(line: string, column: u16): Token[] {
-		const tokens: Token[] = [];
+  @inline
+  private nextLine (): string | null 
+  {
+    if (this.lines.length <= 0) return null;
+    this.currentLine = this.lines.shift();
+    this.currentLineNumber++;
 
-		let i: u16 = 0;
-		let text = "";
+    return this.currentLine;
+  }
 
-		while (line.charAt(i) !== "") {
-			if (line.charAt(i) === "\\") {
-				text += line.charAt(++i);
-				i++;
-			}
+  private tokenizeInline (line: string, column: u16): Token[] 
+  {
+    const lineLength = u16(line.length);
+    const tokens: Token[] = [];
 
-			const key = line.charAt(i);
+    let i: u16 = 0;
+    let text = '';
 
-			if (inlineTypeHandlers.has(key)) {
-				const handler = inlineTypeHandlers.get(key);
-				const inlineToken = handler(
-					line.slice(i),
-					this.currentLineNumber,
-					column + i,
-					0,
-				);
+    while (i < lineLength)
+    {
+      if (line.charAt(i) === '\\') 
+      {
+        text += line.charAt(++i);
+        i++;
+      }
 
-				if (inlineToken) {
-					if (text.length > 0) {
-						tokens.push({
-							type: TokenTypes.Text,
-							value: text,
-							line: this.currentLineNumber,
-							column: column + i - u16(text.length),
-							spacesLength: 0,
-							children: [],
-						});
+      const key = line.charAt(i);
 
-						text = "";
-					}
+      if (inlineTypeHandlers.has(key)) 
+      {
+        const handler = inlineTypeHandlers.get(key);
+        const inlineToken = handler(
+          line.slice(i),
+          this.currentLineNumber,
+          column + i,
+          0,
+        );
 
-					tokens.push(inlineToken);
-					i += u16(inlineToken.value.length);
-					continue;
-				}
-			}
+        if (inlineToken) 
+        {
+          if (text.length > 0) 
+          {
+            tokens.push({
+              type: TokenTypes.Text,
+              value: text,
+              line: this.currentLineNumber,
+              column: column + i - u16(text.length),
+              spacesLength: 0,
+              children: [],
+            });
 
-			text += line.charAt(i);
-			i++;
-		}
+            text = '';
+          }
 
-		if (text.length > 0)
-			tokens.push({
-				type: TokenTypes.Text,
-				value: text,
-				line: this.currentLineNumber,
-				column: column,
-				spacesLength: 0,
-				children: [],
-			});
+          tokens.push(inlineToken);
+          i += u16(inlineToken.value.length);
+          continue;
+        }
+      }
 
-		return tokens;
-	}
+      text += line.charAt(i);
+      i++;
+    }
 
-	private tokenizeBlock(line: string, prevColumn: u16 = 0): Token {
-		const trimed = line.trimStart();
-		const spacesLength: u8 = u8(line.slice(0, -trimed.length).length);
+    if (text.length > 0)
+      tokens.push({
+        type: TokenTypes.Text,
+        value: text,
+        line: this.currentLineNumber,
+        column: column,
+        spacesLength: 0,
+        children: [],
+      });
 
-		let column: u16 = 1 + spacesLength + prevColumn;
+    return tokens;
+  }
 
-		if (trimed.length < 1)
-			return {
-				type: TokenTypes.Blankline,
-				value: trimed,
-				line: this.currentLineNumber,
-				column,
-				spacesLength,
-				children: [],
-			};
+  private tokenizeBlock (line: string, prevColumn: u16 = 0): Token 
+  {
+    const trimed = line.trimStart();
+    const spacesLength: u8 = u8(line.slice(0, -trimed.length).length);
 
-		let token: Token = {
-			type: TokenTypes.Paragraph,
-			value: "",
-			spacesLength,
-			line: this.currentLineNumber,
-			column,
-			children: [],
-		};
+    let column: u16 = 1 + spacesLength + prevColumn;
 
-		const firstChar = trimed.charAt(0);
-		const key = u8.parse(firstChar) === 0 ? firstChar : "number";
+    if (trimed.length < 1)
+      return {
+        type: TokenTypes.Blankline,
+        value: trimed,
+        line: this.currentLineNumber,
+        column,
+        spacesLength,
+        children: [],
+      };
 
-		if (blockTypeHandlers.has(key)) {
-			const handler = blockTypeHandlers.get(key);
-			const blockToken = handler(
-				trimed,
-				this.currentLineNumber,
-				column,
-				spacesLength,
-			);
+    let token: Token = {
+      type: TokenTypes.Paragraph,
+      value: '',
+      spacesLength,
+      line: this.currentLineNumber,
+      column,
+      children: [],
+    };
 
-			if (blockToken) token = blockToken;
-		}
+    const firstChar = trimed.charAt(0);
+    const key = u8.parse(firstChar) === 0 ? firstChar : 'number';
 
-		column = token.spacesLength + u16(token.value.length) + prevColumn;
+    if (blockTypeHandlers.has(key)) 
+    {
+      const handler = blockTypeHandlers.get(key);
+      const blockToken = handler(
+        trimed,
+        this.currentLineNumber,
+        column,
+        spacesLength,
+      );
 
-		switch (token.type) {
-			case TokenTypes.Fenced: {
-				while (this.nextLine()) {
-					const currentLine = this.currentLine;
+      if (blockToken) token = blockToken;
+    }
 
-					if (currentLine.trim() === "```") break;
-					token.value += `\n${currentLine}`;
-				}
+    column = token.spacesLength + u16(token.value.length) + prevColumn;
 
-				return token;
-			}
-			case TokenTypes.UnorderedList: {
-				token.children.push(
-					this.tokenizeBlock(trimed.slice(token.value.length), column),
-				);
-				return token;
-			}
-			case TokenTypes.OrderedList: {
-				token.children.push(
-					this.tokenizeBlock(trimed.slice(token.value.length), column),
-				);
-				return token;
-			}
-			case TokenTypes.Blockquotes: {
-				token.children.push(
-					this.tokenizeBlock(trimed.slice(token.value.length), column),
-				);
+    switch (token.type) 
+    {
+      case TokenTypes.Fenced: {
+        while (this.nextLine()) 
+        {
+          const currentLine = this.currentLine;
 
-				if (this.lines.length <= 0) return token;
-				let key = this.lines[0].trimStart().charAt(0);
+          if (currentLine.trim() === '```') break;
+          token.value += `\n${currentLine}`;
+        }
 
-				while (key === ">") {
-					this.nextLine();
-					token.children = token.children.concat(
-						this.tokenizeBlock(this.currentLine).children,
-					);
+        return token;
+      }
+      case TokenTypes.UnorderedList: {
+        token.children.push(
+          this.tokenizeBlock(trimed.slice(token.value.length), column),
+        );
+        return token;
+      }
+      case TokenTypes.OrderedList: {
+        token.children.push(
+          this.tokenizeBlock(trimed.slice(token.value.length), column),
+        );
+        return token;
+      }
+      case TokenTypes.Blockquotes: {
+        token.children.push(
+          this.tokenizeBlock(trimed.slice(token.value.length), column),
+        );
 
-					if (this.lines.length <= 0) break;
-					key = this.lines[0].trimStart().charAt(0);
-				}
+        if (this.lines.length <= 0) return token;
+        let key = this.lines[0].trimStart().charAt(0);
 
-				return token;
-			}
-		}
+        while (key === '>') 
+        {
+          this.nextLine();
+          token.children = token.children.concat(
+            this.tokenizeBlock(this.currentLine).children,
+          );
 
-		token.children = this.tokenizeInline(
-			trimed.slice(token.value.length),
-			column + 1,
-		);
+          if (this.lines.length <= 0) break;
+          key = this.lines[0].trimStart().charAt(0);
+        }
 
-		return token;
-	}
+        return token;
+      }
+    }
 
-	tokenize(): Token[] {
-		const tokens: Token[] = [];
+    token.children = this.tokenizeInline(
+      trimed.slice(token.value.length),
+      column + 1,
+    );
 
-		while (this.nextLine()) {
-			tokens.push(this.tokenizeBlock(this.currentLine));
-		}
+    return token;
+  }
 
-		return tokens;
-	}
+  tokenize (): Token[] 
+  {
+    const tokens: Token[] = [];
+
+    while (this.nextLine()) 
+    {
+      tokens.push(this.tokenizeBlock(this.currentLine));
+    }
+
+    return tokens;
+  }
 }
