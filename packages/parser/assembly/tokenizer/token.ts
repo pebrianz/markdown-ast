@@ -25,6 +25,7 @@ export enum TokenTypes
   EqualEqual = 62,
   TildeTilde = 63,
   HtmlTag = 64,
+  CustomId = 65,
 }
 
 @final

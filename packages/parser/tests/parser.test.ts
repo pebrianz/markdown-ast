@@ -3,6 +3,7 @@ import dedent from 'dedent';
 import {
   NodeTypes,
   tokenize,
+  getMapValue,
   parse,
 } from '@markdown-ast/parser';
 
@@ -10,27 +11,13 @@ import type {Node} from './types';
 
 describe('parser', async () => 
 {
-  it('should parse heading, paragraph and text', () => 
+  it('should parse paragraph and text', () => 
   {
-    const src = dedent`
-      # heading
-      this is paragraph
-    `;
+    const src = 'this is paragraph';
 
     const tokens = tokenize(src);
     const ast = parse(tokens);
 
-    const expectedHeading: Node = {
-      type: NodeTypes.Heading,
-      textContent: 'heading',
-      childNodes: [
-        {
-          type: NodeTypes.Text,
-          textContent: 'heading',
-          childNodes: [],
-        },
-      ],
-    };
     const expectedParagraph: Node = {
       type: NodeTypes.Paragraph,
       textContent: 'this is paragraph',
@@ -43,10 +30,56 @@ describe('parser', async () =>
       ],
     };
 
-    expect(ast.childNodes).toMatchObject([
-      expectedHeading,
-      expectedParagraph,
-    ]);
+    expect(ast.childNodes).toMatchObject([expectedParagraph]);
+  });
+
+
+  it('should parse heading', () => 
+  {
+    const src = '# This is Heading 1';
+
+    const tokens = tokenize(src);
+    const ast = parse(tokens);
+
+    const expectedHeading: Node = {
+      type: NodeTypes.Heading,
+      textContent: 'This is Heading 1',
+      childNodes: [
+        {
+          type: NodeTypes.Text,
+          textContent: 'This is Heading 1',
+          childNodes: [],
+        },
+      ],
+    };
+    const heading = ast.childNodes[0];
+    const id = getMapValue(heading.attributes, 'id');
+    expect(id).toBe('This-is-Heading-1');
+    expect(heading).toMatchObject(expectedHeading);
+  });
+
+  it('should parse heading with custom id', () => 
+  {
+    const src = '# heading {#custom-id}';
+
+    const tokens = tokenize(src);
+    const ast = parse(tokens);
+
+    const expectedHeading: Node = {
+      type: NodeTypes.Heading,
+      textContent: 'heading ',
+      childNodes: [
+        {
+          type: NodeTypes.Text,
+          textContent: 'heading ',
+          childNodes: [],
+        },
+      ],
+    };
+    const heading = ast.childNodes[0];
+    const id = getMapValue(heading.attributes, 'id');
+    expect(id).toBe('custom-id');
+    expect(heading).toMatchObject(expectedHeading);
   });
 
   it.each([['*']])('should parse bold italic', (mark) => 

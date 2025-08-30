@@ -1,5 +1,6 @@
 import {blockTypeHandlers} from './blockTypeHandlers';
 import {inlineTypeHandlers} from './inlineTypeHandlers';
+import {isDigit} from '../utils';
 
 import {Token, TokenTypes} from './token';
 
@@ -120,8 +121,7 @@ export class Tokenizer
       children: [],
     };
 
-    const firstChar = trimed.charAt(0);
-    const key = u8.parse(firstChar) === 0 ? firstChar : 'number';
+    const key = isDigit(trimed.charCodeAt(0)) ? 'digit' : trimed.charAt(0);
 
     if (blockTypeHandlers.has(key)) 
     {

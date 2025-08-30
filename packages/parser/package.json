@@ -1,6 +1,7 @@
 {
 	"name": "@markdown-ast/parser",
 	"description": "Markdown parser",
+	"version": "0.0.0",
 	"license": "MIT",
 	"author": {
 		"email": "pebrianz117@gmail.com",
@@ -19,10 +20,11 @@
 		"test:debug": "pnpm -w test:debug packages/parser",
 		"test:release": "pnpm -w test:release packages/parser",
 		"test": "pnpm test:debug && pnpm test:release",
-		"lint": "pnpm -w lint packages/parser",
+		"lint": "pnpm -w lint packages/parser --ignore-pattern '**/utils.ts'",
 		"asbuild:debug": "asc assembly/index.ts --target debug",
 		"asbuild:release": "asc assembly/index.ts --target release",
-		"asbuild": "pnpm asbuild:debug & pnpm asbuild:release"
+		"asbuild": "pnpm asbuild:debug & pnpm asbuild:release",
+		"build": "pnpm asbuild"
 	},
 	"files": ["./build", "./assembly"],
 	"exports": {

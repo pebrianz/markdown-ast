@@ -1,233 +1,267 @@
 import {Token, TokenTypes} from '../token';
+import {createMap, isAutoLink} from '../../utils';
 
-export const inlineTypeHandlers = new Map<
+export const inlineTypeHandlers = createMap<
   string,
   (text: string, line: u16, column: u16, spaceslength: u8) => Token | null
->();
-
-inlineTypeHandlers.set('*', (text, line, column, spacesLength) => 
-{
-  let mark = text.charAt(0);
-  let i: u16 = 0;
-
-  while (text.charAt(++i) === '*') 
+>([
   {
-    mark += text.charAt(i);
-  }
-
-  if (mark.length > 3) return null;
-
-  return {
-    type: TokenTypes.Asterisk,
-    value: mark,
-    line,
-    column,
-    spacesLength,
-    children: [],
-  };
-});
-
-inlineTypeHandlers.set('`', (text, line, column, spacesLength) => 
-{
-  const textLength = text.length;
-  let value = text.charAt(0);
-  let i = 0;
-
-  while (++i < textLength) 
-  {
-    if (text.charAt(i) === '\\') 
+    key: '*',
+    value: (text, line, column, spacesLength) => 
     {
-      value += text.charAt(i) + text.charAt(++i);
-      continue;
-    }
+      let mark = text.charAt(0);
 
-    value += text.charAt(i);
+      for (let i = 0; text.charAt(++i) === '*';) 
+      {
+        mark += text.charAt(i);
+      }
 
-    if (text.charAt(i) === '`') break;
-  }
+      if (mark.length > 3) return null;
 
-  return {
-    type: TokenTypes.Code,
-    value,
-    line,
-    column,
-    spacesLength,
-    children: [],
-  };
-});
-
-inlineTypeHandlers.set('|', (text, line, column, spacesLength) => 
-{
-  return {
-    type: TokenTypes.Pipe,
-    value: text.charAt(0),
-    line,
-    column,
-    spacesLength,
-    children: [],
-  };
-});
-
-inlineTypeHandlers.set('!', (text, line, column, spacesLength) => 
-{
-  return {
-    type: TokenTypes.Bang,
-    value: text.charAt(0),
-    line,
-    column,
-    spacesLength,
-    children: [],
-  };
-});
-
-inlineTypeHandlers.set('[', (text, line, column, spacesLength) => 
-{
-  return {
-    type: TokenTypes.OpenBracket,
-    value: text.charAt(0),
-    line,
-    column,
-    spacesLength,
-    children: [],
-  };
-});
-
-inlineTypeHandlers.set(']', (text, line, column, spacesLength) => 
-{
-  return {
-    type: TokenTypes.CloseBracket,
-    value: text.charAt(0),
-    line,
-    column,
-    spacesLength,
-    children: [],
-  };
-});
-
-inlineTypeHandlers.set('(', (text, line, column, spacesLength) => 
-{
-  const textLength = text.length;
-  let value = text.charAt(0);
-  let i = 0;
-
-  while (++i < textLength) 
+      return {
+        type: TokenTypes.Asterisk,
+        value: mark,
+        line,
+        column,
+        spacesLength,
+        children: [],
+      };
+    },
+  },
   {
-    value += text.charAt(i);
+    key: '`',
+    value: (text, line, column, spacesLength) => 
+    {
+      const textLength = text.length;
+      let value = text.charAt(0);
 
-    if (text.charAt(i) === ')') break;
-  }
+      for (let i = 0; ++i < textLength;) 
+      {
+        if (text.charAt(i) === '\\') 
+        {
+          value += text.charAt(i) + text.charAt(++i);
+          continue;
+        }
 
-  if (value.charAt(value.length - 1) !== ')') return null;
+        value += text.charAt(i);
 
-  return {
-    type: TokenTypes.LinkURL,
-    value,
-    line,
-    column,
-    spacesLength,
-    children: [],
-  };
-});
+        if (text.charAt(i) === '`') break;
+      }
 
-function isAutoLink (text: string): bool 
-{
-  // no spaces allowed in autolink
-  if (text.includes(' ')) return false;
-
-  // starts with URL scheme or looks like email
-  return (
-    text.startsWith('<http://') ||
-		text.startsWith('<https://') ||
-		text.startsWith('<ftp://') ||
-		text.startsWith('<mailto:') ||
-		text.includes('@')
-  ); // simple email detection
-}
-
-inlineTypeHandlers.set('<', (text, line, column, spacesLength) => 
-{
-  const textLength = text.length;
-  let value = text.charAt(0);
-
-  if (textLength < 2 || text.charAt(1) === ' ') return null;
-  let i = 0;
-
-  while (++i < textLength) 
+      return {
+        type: TokenTypes.Code,
+        value,
+        line,
+        column,
+        spacesLength,
+        children: [],
+      };
+    },
+  },
   {
-    const char = text.charAt(i);
-    value += char;
+    key: '|',
+    value: (text, line, column, spacesLength) => 
+    {
+      return {
+        type: TokenTypes.Pipe,
+        value: text.charAt(0),
+        line,
+        column,
+        spacesLength,
+        children: [],
+      };
+    },
+  },
+  {
+    key: '!',
+    value: (text, line, column, spacesLength) => 
+    {
+      return {
+        type: TokenTypes.Bang,
+        value: text.charAt(0),
+        line,
+        column,
+        spacesLength,
+        children: [],
+      };
+    },
+  },
+  {
+    key: '[',
+    value: (text, line, column, spacesLength) => 
+    {
+      return {
+        type: TokenTypes.OpenBracket,
+        value: text.charAt(0),
+        line,
+        column,
+        spacesLength,
+        children: [],
+      };
+    },
+  },
+  {
+    key: ']',
+    value: (text, line, column, spacesLength) => 
+    {
+      return {
+        type: TokenTypes.CloseBracket,
+        value: text.charAt(0),
+        line,
+        column,
+        spacesLength,
+        children: [],
+      };
+    },
+  },
+  {
+    key: '(',
+    value: (text, line, column, spacesLength) => 
+    {
+      const textLength = text.length;
+      let value = text.charAt(0);
 
-    if (char === '>') break;
-  }
+      for (let i = 0; ++i < textLength;) 
+      {
+        value += text.charAt(i);
 
-  if (value.charAt(value.length - 1) !== '>') return null;
+        if (text.charAt(i) === ')') break;
+      }
 
-  if (isAutoLink(value))
-    return {
-      type: TokenTypes.AutoLink,
-      value,
-      line,
-      column,
-      spacesLength,
-      children: [],
-    };
+      if (value.charAt(value.length - 1) !== ')') return null;
 
-  return {
-    type: TokenTypes.HtmlTag,
-    value,
-    line,
-    column,
-    spacesLength,
-    children: [],
-  };
-});
+      return {
+        type: TokenTypes.LinkURL,
+        value,
+        line,
+        column,
+        spacesLength,
+        children: [],
+      };
+    },
+  },
+  {
+    key: '{',
+    value: (text, line, column, spacesLength) =>
+    {
+      if(text.charAt(1) !== '#') return null;
+      
+      const textLength = text.length;
+      let value = text.charAt(0) + text.charAt(1) + text.charAt(2);
 
-inlineTypeHandlers.set(':', (text, line, column, spacesLength) => 
-{
-  if (text.length < 2 || text.charAt(1) !== ' ') return null;
+      for (let i = 2; ++i < textLength;)
+      {
+        const char = text.charAt(i);
 
-  return {
-    type: TokenTypes.ColonWithSpace,
-    value: text.charAt(0) + text.charAt(1),
-    line,
-    column,
-    spacesLength,
-    children: [],
-  };
-});
+        if(char === ' ') return null;
+        value += char;
 
-inlineTypeHandlers.set('=', (text, line, column, spacesLength) => 
-{
-  let mark = text.charAt(0);
-  const secondChar = text.charAt(1);
+        if(char === '}') break;
+      }
+  
+      return {
+        type: TokenTypes.CustomId,
+        value,
+        line,
+        column,
+        spacesLength,
+        children: [],
+      };
+    },
+  },
+  {
+    key: '<',
+    value: (text, line, column, spacesLength) => 
+    {
+      const textLength = text.length;
+      let value = text.charAt(0);
 
-  if (text.length > 1 && secondChar !== '=') return null;
-  mark += secondChar;
+      if (textLength < 2 || text.charAt(1) === ' ') return null;
 
-  return {
-    type: TokenTypes.EqualEqual,
-    value: mark,
-    line,
-    column,
-    spacesLength,
-    children: [],
-  };
-});
+      for (let i = 0; ++i < textLength;) 
+      {
+        const char = text.charAt(i);
+        value += char;
 
-inlineTypeHandlers.set('~', (text, line, column, spacesLength) => 
-{
-  let mark = text.charAt(0);
-  const secondChar = text.charAt(1);
+        if (char === '>') break;
+      }
 
-  if (text.length > 1 && secondChar !== '~') return null;
-  mark += secondChar;
+      if (value.charAt(value.length - 1) !== '>') return null;
 
-  return {
-    type: TokenTypes.TildeTilde,
-    value: mark,
-    line,
-    column,
-    spacesLength,
-    children: [],
-  };
-});
+      if (isAutoLink(value))
+        return {
+          type: TokenTypes.AutoLink,
+          value,
+          line,
+          column,
+          spacesLength,
+          children: [],
+        };
+
+      return {
+        type: TokenTypes.HtmlTag,
+        value,
+        line,
+        column,
+        spacesLength,
+        children: [],
+      };
+    },
+  },
+  {
+    key: ':',
+    value: (text, line, column, spacesLength) => 
+    {
+      if (text.length < 2 || text.charAt(1) !== ' ') return null;
+
+      return {
+        type: TokenTypes.ColonWithSpace,
+        value: text.charAt(0) + text.charAt(1),
+        line,
+        column,
+        spacesLength,
+        children: [],
+      };
+    },
+  },
+  {
+    key: '=',
+    value: (text, line, column, spacesLength) => 
+    {
+      let mark = text.charAt(0);
+      const secondChar = text.charAt(1);
+
+      if (text.length > 1 && secondChar !== '=') return null;
+      mark += secondChar;
+
+      return {
+        type: TokenTypes.EqualEqual,
+        value: mark,
+        line,
+        column,
+        spacesLength,
+        children: [],
+      };
+    },
+  },
+  {
+    key: '~',
+    value: (text, line, column, spacesLength) => 
+    {
+      let mark = text.charAt(0);
+      const secondChar = text.charAt(1);
+
+      if (text.length > 1 && secondChar !== '~') return null;
+      mark += secondChar;
+
+      return {
+        type: TokenTypes.TildeTilde,
+        value: mark,
+        line,
+        column,
+        spacesLength,
+        children: [],
+      };
+    },
+  },
+]);

@@ -1,10 +1,11 @@
 // The entry file of your WebAssembly module.
 import {Tokenizer} from './tokenizer/tokenizer';
-import {Parser, Document, Node, NodeTypes} from './parser';
+import {Parser, Document} from './parser';
 import {Token} from './tokenizer/token';
 
 export {TokenTypes} from './tokenizer/token';
 export {NodeTypes} from './parser';
+export {createNode} from './utils';
 
 export function tokenize (src: string): Token[] 
 {
@@ -22,14 +23,4 @@ export function getMapValue (
 ): string | null 
 {
   return map.has(key) ? map.get(key) : null;
-}
-
-export function createNode (
-  type: NodeTypes,
-  textContent: string = '',
-  childNodes: Node[] = [],
-  attributes: Map<string, string> = new Map<string, string>(),
-): Node 
-{
-  return {type, textContent, childNodes, attributes};
 }

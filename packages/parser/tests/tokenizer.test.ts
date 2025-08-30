@@ -1,7 +1,7 @@
 import {describe, it, expect} from 'vitest';
 import dedent from 'dedent';
 
-import {tokenize, TokenTypes} from '../build/debug.js';
+import {tokenize, TokenTypes} from '@markdown-ast/parser';
 import type {Token} from '../assembly/tokenizer/token';
 
 describe('lexer', async () => 
@@ -30,6 +30,40 @@ describe('lexer', async () =>
       ],
     };
     expect(tokens).toEqual([expectedParagraph]);
+  });
+
+  it('should tokenize heading with custom id', () =>
+  {
+    const src = '# Heading {#this-is_custom:ID123}';
+
+    const tokens = tokenize(src);
+
+    const heading: Token = {
+      type: TokenTypes.Heading,
+      value: '# ',
+      line: 1,
+      column: 1,
+      spacesLength: 0,
+      children: [
+        {
+          type: TokenTypes.Text,
+          value: 'Heading ',
+          line: 1,
+          column: 3,
+          spacesLength: 0,
+          children: [],
+        },
+        {
+          type: TokenTypes.CustomId,
+          value: '{#this-is_custom:ID123}',
+          line: 1,
+          column: 11,
+          spacesLength: 0,
+          children: [],
+        },
+      ],
+    };
+    expect(tokens).toEqual([heading]);
   });
 
   it('should tokenize blockquotes', () => 
