@@ -123,23 +123,46 @@ export class Parser
 			children[0].type === TokenTypes.ColonWithSpace
     ) 
     {
-      const url = children[1].value.trim();
-      this.document.linkReferences.set(textContent, url);
+      children.shift();
+      const parsedChildren = this.parseChildren(children);
+      this.document.linkReferences.set(textContent, parsedChildren.textContent);
       return this.parseText('');
     }
 
     const attributes = new Map<string, string>();
 
-    if (children.length > 0 && children[0].type === TokenTypes.LinkURL) 
+    if (children.length > 2 && children[0].type === TokenTypes.OpenParen) 
     {
-      const url = children[0].value.slice(1, -1).trim();
-      attributes.set('href', url);
-      children.shift();
+      const href = children[1].value.trimEnd();
+      let len = 0;
+
+      if(children.length > 3
+        && children[2].type === TokenTypes.Delimited
+        && children[3].type === TokenTypes.CloseParen)
+      {
+        const delimited = children[2].value;
+        const title = delimited.slice(1, -1);
+        attributes.set('title', title);
+        attributes.set('href', href);
+        len = 4;
+      }
+
+      if(children[2].type === TokenTypes.CloseParen)
+      {
+        attributes.set('href', href);
+        len = 3;
+      }
+
+      for (let i = 0; i++ < len;)
+      {
+        children.shift();
+      }
     }
 
     return createNode(NodeTypes.Link, textContent, childNodes, attributes);
   }
 
+  @inline
   private parseImage (): Node 
   {
     if (
@@ -152,34 +175,14 @@ export class Parser
 
     this.currentToken.children.shift();
 
-    const children = this.currentToken.children;
+    const link = this.parseLink();
 
-    if (children.length <= 0) return createNode(NodeTypes.Image);
-    const childNodes: Node[] = [];
-
-    let currentToken = children.shift();
-    let textContent = '';
-
-    while (currentToken.type !== TokenTypes.CloseBracket) 
-    {
-      const node = this.parseInline(currentToken);
-      textContent += node.textContent;
-      childNodes.push(node);
-
-      if (children.length <= 0) break;
-      currentToken = children.shift();
-    }
-
-    const attributes = new Map<string, string>();
-
-    if (children.length > 0 && children[0].type === TokenTypes.LinkURL) 
-    {
-      const url = children[0].value.slice(1, -1).trim();
-      attributes.set('href', url);
-      children.shift();
-    }
-
-    return createNode(NodeTypes.Image, textContent, childNodes, attributes);
+    return createNode(
+      NodeTypes.Image,
+      link.textContent,
+      link.childNodes,
+      link.attributes,
+    );
   }
 
   @inline
@@ -273,6 +276,12 @@ export class Parser
           TokenTypes.TildeTilde,
           NodeTypes.Strikethrough,
         );
+      case TokenTypes.Delimited:
+        return this.parseText(token.value);
+      case TokenTypes.OpenParen:
+        return this.parseText(token.value);
+      case TokenTypes.CloseParen:
+        return this.parseText(token.value);
       case TokenTypes.Code:
         return this.parseCode(token.value);
       case TokenTypes.OpenBracket:
@@ -298,7 +307,6 @@ export class Parser
     throw new Error(`Unregonize token type '${token.type}'`);
   }
 
-  @inline
   private parseChildren (children: Token[]): Node 
   {
     if (children.length <= 0) return createNode(NodeTypes.Document);

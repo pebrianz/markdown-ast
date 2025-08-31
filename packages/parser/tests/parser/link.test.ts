@@ -36,10 +36,22 @@ describe('image, link and references link', async () =>
     };
     const paragraph = ast.childNodes[0];
     expect(paragraph).toMatchObject(ecpectedResult);
+  });
 
-    const link = paragraph.childNodes[0];
+  it('should parse link with attribute href and title', () =>
+  {
+    const src =
+     '[text](https://github.com/pebrianz/markdown-ast "Markdown Parser")';
+    
+    const tokens = tokenize(src);
+    const ast = parse(tokens);
+    const link = ast.childNodes[0].childNodes[0];
+
     const href = getMapValue(link.attributes, 'href');
     expect(href).toBe('https://github.com/pebrianz/markdown-ast');
+
+    const title = getMapValue(link.attributes, 'title');
+    expect(title).toBe('Markdown Parser');
   });
 
   it('should parse image', () => 
@@ -146,12 +158,14 @@ describe('image, link and references link', async () =>
 
   it('should parse link reference', () => 
   {
-    const src = '[1]: https://github.com/pebrianz/markdown-ast';
+    const src =
+    '[1]: https://github.com/pebrianz/markdown-ast "Markdown Parser"';
 
     const tokens = tokenize(src);
     const ast = parse(tokens);
 
     const link = getMapValue(ast.linkReferences, '1');
-    expect(link).toBe('https://github.com/pebrianz/markdown-ast');
+    expect(link)
+      .toBe('https://github.com/pebrianz/markdown-ast "Markdown Parser"');
   });
 });

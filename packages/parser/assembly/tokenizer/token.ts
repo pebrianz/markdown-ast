@@ -26,6 +26,9 @@ export enum TokenTypes
   TildeTilde = 63,
   HtmlTag = 64,
   CustomId = 65,
+  Delimited = 66,
+  OpenParen = 67,
+  CloseParen = 68,
 }
 
 @final

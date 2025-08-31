@@ -23,7 +23,7 @@
 		"lint": "pnpm -w lint packages/parser --ignore-pattern '**/utils.ts'",
 		"asbuild:debug": "asc assembly/index.ts --target debug",
 		"asbuild:release": "asc assembly/index.ts --target release",
-		"asbuild": "pnpm asbuild:debug & pnpm asbuild:release",
+		"asbuild": "pnpm asbuild:debug && pnpm asbuild:release",
 		"build": "pnpm asbuild"
 	},
 	"files": ["./build", "./assembly"],

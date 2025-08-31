@@ -42,12 +42,11 @@ export const inlineTypeHandlers = createMap<
           value += text.charAt(i) + text.charAt(++i);
           continue;
         }
-
+        
         value += text.charAt(i);
-
         if (text.charAt(i) === '`') break;
       }
-
+      
       return {
         type: TokenTypes.Code,
         value,
@@ -118,20 +117,72 @@ export const inlineTypeHandlers = createMap<
     key: '(',
     value: (text, line, column, spacesLength) => 
     {
+      return {
+        type: TokenTypes.OpenParen,
+        value: text.charAt(0),
+        line,
+        column,
+        spacesLength,
+        children: [],
+      };
+    },
+  },
+  {
+    key: ')',
+    value: (text, line, column, spacesLength) => 
+    {
+      return {
+        type: TokenTypes.CloseParen,
+        value: text.charAt(0),
+        line,
+        column,
+        spacesLength,
+        children: [],
+      };
+    },
+  },
+  {
+    key: '"',
+    value: (text, line, column, spacesLength) =>
+    {
       const textLength = text.length;
       let value = text.charAt(0);
 
-      for (let i = 0; ++i < textLength;) 
+      for(let i = 0; ++i < textLength;)
       {
-        value += text.charAt(i);
-
-        if (text.charAt(i) === ')') break;
+        if(i >= textLength) return null;
+        const char = text.charAt(i);
+        value += char;
+        if(char === '"') break;
       }
 
-      if (value.charAt(value.length - 1) !== ')') return null;
+      return {
+        type: TokenTypes.Delimited,
+        value,
+        line,
+        column,
+        spacesLength,
+        children: [],
+      };
+    },
+  },
+  {
+    key: '\'',
+    value: (text, line, column, spacesLength) =>
+    {
+      const textLength = text.length;
+      let value = text.charAt(0);
+
+      for(let i = 0; ++i;)
+      {
+        if(i >= textLength) return null;
+        const char = text.charAt(i);
+        value += char;
+        if(char === '\'') break;
+      }
 
       return {
-        type: TokenTypes.LinkURL,
+        type: TokenTypes.Delimited,
         value,
         line,
         column,
@@ -145,20 +196,19 @@ export const inlineTypeHandlers = createMap<
     value: (text, line, column, spacesLength) =>
     {
       if(text.charAt(1) !== '#') return null;
-      
+
       const textLength = text.length;
       let value = text.charAt(0) + text.charAt(1) + text.charAt(2);
 
       for (let i = 2; ++i < textLength;)
       {
         const char = text.charAt(i);
-
         if(char === ' ') return null;
-        value += char;
 
+        value += char;
         if(char === '}') break;
       }
-  
+
       return {
         type: TokenTypes.CustomId,
         value,
@@ -174,20 +224,17 @@ export const inlineTypeHandlers = createMap<
     value: (text, line, column, spacesLength) => 
     {
       const textLength = text.length;
-      let value = text.charAt(0);
-
       if (textLength < 2 || text.charAt(1) === ' ') return null;
 
+      let value = text.charAt(0);
       for (let i = 0; ++i < textLength;) 
       {
         const char = text.charAt(i);
         value += char;
-
         if (char === '>') break;
       }
-
       if (value.charAt(value.length - 1) !== '>') return null;
-
+      
       if (isAutoLink(value))
         return {
           type: TokenTypes.AutoLink,
@@ -197,7 +244,7 @@ export const inlineTypeHandlers = createMap<
           spacesLength,
           children: [],
         };
-
+        
       return {
         type: TokenTypes.HtmlTag,
         value,
@@ -228,15 +275,12 @@ export const inlineTypeHandlers = createMap<
     key: '=',
     value: (text, line, column, spacesLength) => 
     {
-      let mark = text.charAt(0);
       const secondChar = text.charAt(1);
-
       if (text.length > 1 && secondChar !== '=') return null;
-      mark += secondChar;
 
       return {
         type: TokenTypes.EqualEqual,
-        value: mark,
+        value: text.charAt(0) + secondChar,
         line,
         column,
         spacesLength,
@@ -248,15 +292,12 @@ export const inlineTypeHandlers = createMap<
     key: '~',
     value: (text, line, column, spacesLength) => 
     {
-      let mark = text.charAt(0);
       const secondChar = text.charAt(1);
-
       if (text.length > 1 && secondChar !== '~') return null;
-      mark += secondChar;
 
       return {
         type: TokenTypes.TildeTilde,
-        value: mark,
+        value: text.charAt(0) + secondChar,
         line,
         column,
         spacesLength,

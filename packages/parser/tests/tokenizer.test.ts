@@ -320,7 +320,8 @@ describe('lexer', async () =>
 
   it('should tokenize link', () => 
   {
-    const src = '[markdown-ast](https://github.com/pebrianz/markdown-ast)';
+    const src =
+    '[markdown-ast](https://github.com/pebrianz/markdown-ast "title")';
 
     const tokens = tokenize(src);
 
@@ -356,10 +357,34 @@ describe('lexer', async () =>
           children: [],
         },
         {
-          type: TokenTypes.LinkURL,
-          value: '(https://github.com/pebrianz/markdown-ast)',
+          type: TokenTypes.OpenParen,
+          value: '(',
           line: 1,
           column: 15,
+          spacesLength: 0,
+          children: [],
+        },
+        {
+          type: TokenTypes.Text,
+          value: 'https://github.com/pebrianz/markdown-ast ',
+          line: 1,
+          column: 16,
+          spacesLength: 0,
+          children: [],
+        },
+        {
+          type: TokenTypes.Delimited,
+          value: '"title"',
+          line: 1,
+          column: 57,
+          spacesLength: 0,
+          children: [],
+        },
+        {
+          type: TokenTypes.CloseParen,
+          value: ')',
+          line: 1,
+          column: 64,
           spacesLength: 0,
           children: [],
         },
