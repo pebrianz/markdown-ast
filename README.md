@@ -6,7 +6,7 @@
 [![Coverage Status](https://img.shields.io/codecov/c/github/your-username/markdown-ast?label=coverage)](https://codecov.io/gh/your-username/markdown-ast)
 -->
 
-> **Markdown AST library** — high-performance parser written in **AssemblyScript**.
+> **Markdown AST library** — high-performance markdown parser for **JavaScript/TypeScript**.
 
 ---
 
@@ -25,11 +25,8 @@
 | **Bold / Italic**      | `**bold**`, `*italic*`            | **bold**, *italic*                |
 | **Blockquotes**        | `> quote`                         | > This is a quote                 |
 | **Lists**              | `- item` / `1. item`              | - Unordered <br> 1. Ordered       |
-| **Inline Code**        | `` `code` ``                      | `inline code`                     |
-| **Fenced Code Blocks** | ` ```lang … ``` `                 | \`\`\`js <br>console.log("Hello") |
-| **Horizontal Rules**   | `---` / `***` / `___`             | ---                               |
-| **Links**              | `[text](url)`                     | [example](https://github.com/pebrianz)    |
-| **Images**             | `![alt](src)`                     | ![img](image.jpg)                 |
+
+[see more](./packages/parser/supported-markdown-syntax.md).
 
 ---
 
@@ -76,7 +73,7 @@ console.dir(ast, { depth:null });
 markdown-ast/
 ├── packages/
 │   └── parser/            # Core AssemblyScript Markdown parser
-│   ├── transform/         # (Planned) AST → HTML transformer
+│   ├── transformer/         # (Planned) AST → HTML transformer
 └── package.json           # Monorepo workspaces configuration
 ```
 
