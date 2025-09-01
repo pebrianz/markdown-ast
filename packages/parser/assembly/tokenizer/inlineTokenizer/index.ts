@@ -1,7 +1,7 @@
 import {Token, TokenTypes} from '../token';
 import {createMap, isAutoLink} from '../../utils';
 
-export const inlineTypeHandlers = createMap<
+export const inlineTokenizer = createMap<
   string,
   (text: string, line: u16, column: u16, spaceslength: u8) => Token | null
 >([

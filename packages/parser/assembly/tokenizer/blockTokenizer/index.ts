@@ -1,7 +1,7 @@
 import {Token, TokenTypes} from '../token';
 import {createMap} from '../../utils';
 
-export const blockTypeHandlers = createMap<
+export const blockTokenizer = createMap<
   string,
   (text: string, line: u16, column: u16, spaceslength: u8) => Token | null
 >([

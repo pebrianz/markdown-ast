@@ -19,7 +19,7 @@ export enum TokenTypes
   Bang = 56,
   OpenBracket = 57,
   CloseBracket = 58,
-  LinkURL = 59,
+
   AutoLink = 60,
   ColonWithSpace = 61,
   EqualEqual = 62,

@@ -1,4 +1,4 @@
-import { NodeTypes, Node } from "./parser";
+import { NodeTypes, Node } from "./parser/ast";
 
 @inline
 export function createNode (

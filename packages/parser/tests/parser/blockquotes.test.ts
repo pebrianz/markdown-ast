@@ -1,17 +1,12 @@
 import {describe, it, expect} from 'vitest';
 import dedent from 'dedent';
-
 import {
   NodeTypes,
-  type createNode,
   tokenize,
   parse,
-} from '../../build/debug.js';
+} from '@markdown-ast/parser';
 
-type Node = Omit<
-  Omit<ReturnType<typeof createNode>, 'attributes'>,
-  'childNodes'
-> & {childNodes: Node[]};
+import type {Node} from '../types';
 
 describe('blockquotes', async () => 
 {

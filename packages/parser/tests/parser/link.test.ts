@@ -164,8 +164,118 @@ describe('image, link and references link', async () =>
     const tokens = tokenize(src);
     const ast = parse(tokens);
 
-    const link = getMapValue(ast.linkReferences, '1');
-    expect(link)
+    const reference = getMapValue(ast.linkReferences, '1');
+    expect(reference)
       .toBe('https://github.com/pebrianz/markdown-ast "Markdown Parser"');
   });
+
+  it('should parse link with attribute reference label', () => 
+  {
+    const src = '[markdown][reference]';
+
+    const tokens = tokenize(src);
+    const ast = parse(tokens);
+
+    const link = ast.childNodes[0].childNodes[0];
+    const reference = getMapValue(link.attributes, 'reference');
+    expect(reference).toBe('reference');
+  });
+
+  it('should treat as text, if missing closing parenthesis', () =>
+  {
+    const src = '[label](url';
+
+    const tokens = tokenize(src);
+    const ast = parse(tokens);
+
+    const expectedResult: Node[] = [
+      {
+        type: NodeTypes.Link,
+        textContent: 'label',
+        childNodes: [{
+          type: NodeTypes.Text,
+          textContent: 'label',
+          childNodes: [],
+        }],
+      },
+      {
+        type: NodeTypes.Text,
+        textContent: '(',
+        childNodes: [],
+      },
+      {
+        type: NodeTypes.Text,
+        textContent: 'url',
+        childNodes: [],
+      },
+    ];
+    expect(ast.childNodes[0].childNodes).toMatchObject(expectedResult);
+  });
+
+  it('should treat as text, if delimiter is missing in title', () =>
+  {
+    const src = '[label](url "title)';
+
+    const tokens = tokenize(src);
+    const ast = parse(tokens);
+
+    const expectedResult: Node[] = [
+      {
+        type: NodeTypes.Link,
+        textContent: 'label',
+        childNodes: [{
+          type: NodeTypes.Text,
+          textContent: 'label',
+          childNodes: [],
+        }],
+      },
+      {
+        type: NodeTypes.Text,
+        textContent: '(',
+        childNodes: [],
+      },
+      {
+        type: NodeTypes.Text,
+        textContent: 'url ',
+        childNodes: [],
+      },
+      {
+        type: NodeTypes.Text,
+        textContent: '"title)',
+        childNodes: [],
+      },
+    ];
+    expect(ast.childNodes[0].childNodes).toMatchObject(expectedResult);
+  });
+
+  it('should treat referencelabel as another link, if missing close bracket',
+    () =>
+    {
+      const src = '[label][referenceLabel';
+
+      const tokens = tokenize(src);
+      const ast = parse(tokens);
+
+      const expectedResult: Node[] = [
+        {
+          type: NodeTypes.Link,
+          textContent: 'label',
+          childNodes: [{
+            type: NodeTypes.Text,
+            textContent: 'label',
+            childNodes: [],
+          }],
+        },
+        {
+          type: NodeTypes.Link,
+          textContent: 'referenceLabel',
+          childNodes: [{
+            type: NodeTypes.Text,
+            textContent: 'referenceLabel',
+            childNodes: [],
+          }],
+        },
+      ];
+      expect(ast.childNodes[0].childNodes).toMatchObject(expectedResult);
+    });
 });

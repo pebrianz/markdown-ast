@@ -1,7 +1,6 @@
-import {blockTypeHandlers} from './blockTypeHandlers';
-import {inlineTypeHandlers} from './inlineTypeHandlers';
+import {blockTokenizer} from './blockTokenizer';
+import {inlineTokenizer} from './inlineTokenizer';
 import {isDigit} from '../utils';
-
 import {Token, TokenTypes} from './token';
 
 @final
@@ -12,11 +11,6 @@ export class Tokenizer
   private currentLine: string = '';
 
   private currentLineNumber: u16 = 0;
-
-  constructor (source: string) 
-  {
-    this.lines = source.split('\n');
-  }
 
   @inline
   private nextLine (): string | null 
@@ -46,9 +40,9 @@ export class Tokenizer
 
       const key = line.charAt(i);
 
-      if (inlineTypeHandlers.has(key)) 
+      if (inlineTokenizer.has(key)) 
       {
-        const handler = inlineTypeHandlers.get(key);
+        const handler = inlineTokenizer.get(key);
         const inlineToken = handler(
           line.slice(i),
           this.currentLineNumber,
@@ -123,9 +117,9 @@ export class Tokenizer
 
     const key = isDigit(trimed.charCodeAt(0)) ? 'digit' : trimed.charAt(0);
 
-    if (blockTypeHandlers.has(key)) 
+    if (blockTokenizer.has(key)) 
     {
-      const handler = blockTypeHandlers.get(key);
+      const handler = blockTokenizer.get(key);
       const blockToken = handler(
         trimed,
         this.currentLineNumber,
@@ -194,10 +188,11 @@ export class Tokenizer
     return token;
   }
 
-  tokenize (): Token[] 
+  tokenize (source: string): Token[] 
   {
-    const tokens: Token[] = [];
+    this.lines = source.split('\n');
 
+    const tokens: Token[] = [];
     while (this.nextLine()) 
     {
       tokens.push(this.tokenizeBlock(this.currentLine));

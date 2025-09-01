@@ -1,58 +1,18 @@
-import {Token, TokenTypes} from './tokenizer/token';
-import {createNode} from './utils';
+import {Document, Node, NodeTypes} from './ast';
+import {Token, TokenTypes} from '../tokenizer/token';
+import {createNode, createSet} from '../utils';
 
-export enum NodeTypes 
-{
-  // Block node types
-  Document = 0,
-  Heading = 1,
-  Paragraph = 2,
-  Blockquotes = 3,
-  Table = 4,
-  TableRow = 5,
-  TableCell = 6,
-  TableHeader = 7,
-  List = 8,
-  ListItem = 9,
-  HorizontalRule = 10,
-  Fenced = 11,
-
-  // Inline node types
-  Text = 50,
-  Italic = 51,
-  Bold = 52,
-  BlockItalic = 53,
-  Code = 54,
-  Link = 55,
-  Image = 56,
-  LinkReference = 57,
-  Highlight = 58,
-  Strikethrough = 59,
-  HtmlTag = 60,
-}
-
-export class Node 
-{
-  type: NodeTypes;
-
-  childNodes: Node[];
-
-  textContent: string;
-
-  attributes: Map<string, string>;
-}
-
-@final
-export class Document 
-{
-  type: NodeTypes = NodeTypes.Document;
-
-  childNodes: Node[] = [];
-
-  linkReferences: Map<string, string> = new Map<string, string>();
-}
-
-
+const parseToText: Set<TokenTypes> = createSet([
+  TokenTypes.Text,
+  TokenTypes.Delimited,
+  TokenTypes.OpenParen,
+  TokenTypes.CloseParen,
+  TokenTypes.CloseBracket,
+  TokenTypes.ColonWithSpace,
+  TokenTypes.Pipe,
+  TokenTypes.CustomId,
+]);
+  
 @final
 export class Parser 
 {
@@ -62,8 +22,7 @@ export class Parser
 
   private currentTokens: Token[] = [];
 
-  constructor (private tokens: Token[]) 
-  {}
+  private tokens: Token[] = [];
 
   @inline
   private nextToken (): Token | null 
@@ -75,11 +34,11 @@ export class Parser
     return this.currentToken;
   }
 
-  private parseBlockItalic (type: TokenTypes, markLength: i32): Node 
+  private parseBlockItalic (type: TokenTypes, markLength: i32): Node
   {
+    if (this.currentToken.children.length <= 0)
+      return createNode(50 + markLength);
     const children = this.currentToken.children;
-
-    if (children.length <= 0) return createNode(50 + markLength);
     const childNodes: Node[] = [];
 
     let currentToken = children.shift();
@@ -101,7 +60,6 @@ export class Parser
   private parseLink (): Node 
   {
     const children = this.currentToken.children;
-
     if (children.length <= 0) return createNode(NodeTypes.Link);
     const childNodes: Node[] = [];
 
@@ -118,45 +76,58 @@ export class Parser
       currentToken = children.shift();
     }
 
-    if (
-      children.length > 1 &&
-			children[0].type === TokenTypes.ColonWithSpace
-    ) 
-    {
-      children.shift();
-      const parsedChildren = this.parseChildren(children);
-      this.document.linkReferences.set(textContent, parsedChildren.textContent);
-      return this.parseText('');
-    }
-
     const attributes = new Map<string, string>();
+    let len = 0;
 
-    if (children.length > 2 && children[0].type === TokenTypes.OpenParen) 
+    if(children.length <= 0)
+      return createNode(NodeTypes.Link, textContent, childNodes, attributes);
+
+    switch (children[0].type)
     {
-      const href = children[1].value.trimEnd();
-      let len = 0;
-
-      if(children.length > 3
-        && children[2].type === TokenTypes.Delimited
-        && children[3].type === TokenTypes.CloseParen)
+      case TokenTypes.OpenBracket:
       {
-        const delimited = children[2].value;
-        const title = delimited.slice(1, -1);
-        attributes.set('title', title);
-        attributes.set('href', href);
-        len = 4;
+        if(children.length > 2 && children[2].type === TokenTypes.CloseBracket)
+        {
+          attributes.set('reference', children[1].value);
+          len = 3;
+        }
+        break;
       }
-
-      if(children[2].type === TokenTypes.CloseParen)
-      {
-        attributes.set('href', href);
-        len = 3;
-      }
-
-      for (let i = 0; i++ < len;)
+      case TokenTypes.ColonWithSpace:
       {
         children.shift();
+        const parsedChildren = this.parseChildren(children);
+        this.document
+          .linkReferences.set(textContent, parsedChildren.textContent);
+        return this.parseText('');
       }
+      case TokenTypes.OpenParen:
+      {
+        if (children.length <= 2) break;
+        const href = children[1].value.trimEnd();
+
+        if(children.length > 3
+          && children[2].type === TokenTypes.Delimited
+          && children[3].type === TokenTypes.CloseParen)
+        {
+          const delimited = children[2].value;
+          const title = delimited.slice(1, -1);
+          attributes.set('title', title);
+          attributes.set('href', href);
+          len = 4;
+        }
+
+        if(children[2].type === TokenTypes.CloseParen)
+        {
+          attributes.set('href', href);
+          len = 3;
+        }
+      }
+    }
+    
+    for (let i = 0; i++ < len;)
+    {
+      children.shift();
     }
 
     return createNode(NodeTypes.Link, textContent, childNodes, attributes);
@@ -165,16 +136,11 @@ export class Parser
   @inline
   private parseImage (): Node 
   {
-    if (
-      this.currentToken.children.length <= 0 ||
-			this.currentToken.children[0].type !== TokenTypes.OpenBracket
-    ) 
-    {
+    const children = this.currentToken.children;
+    if (children.length <= 0 || children[0].type !== TokenTypes.OpenBracket) 
       return this.parseText(this.currentToken.value);
-    }
 
-    this.currentToken.children.shift();
-
+    children.shift();
     const link = this.parseLink();
 
     return createNode(
@@ -260,12 +226,15 @@ export class Parser
 
   private parseInline (token: Token): Node 
   {
-    switch (token.type) 
+    const tokenType = token.type;
+    const tokenValue = token.value;
+
+    if(parseToText.has(tokenType)) return this.parseText(tokenValue);
+
+    switch (tokenType) 
     {
-      case TokenTypes.Text:
-        return this.parseText(token.value);
       case TokenTypes.Asterisk:
-        return this.parseBlockItalic(token.type, token.value.length);
+        return this.parseBlockItalic(tokenType, tokenValue.length);
       case TokenTypes.EqualEqual:
         return this.parseWrapedInline(
           TokenTypes.EqualEqual,
@@ -276,35 +245,19 @@ export class Parser
           TokenTypes.TildeTilde,
           NodeTypes.Strikethrough,
         );
-      case TokenTypes.Delimited:
-        return this.parseText(token.value);
-      case TokenTypes.OpenParen:
-        return this.parseText(token.value);
-      case TokenTypes.CloseParen:
-        return this.parseText(token.value);
       case TokenTypes.Code:
-        return this.parseCode(token.value);
+        return this.parseCode(tokenValue);
       case TokenTypes.OpenBracket:
         return this.parseLink();
-      case TokenTypes.CloseBracket:
-        return this.parseText(token.value);
-      case TokenTypes.LinkURL:
-        return this.parseText(token.value);
       case TokenTypes.AutoLink:
-        return this.parseAutoLink(token.value);
+        return this.parseAutoLink(tokenValue);
       case TokenTypes.HtmlTag:
-        return this.parseHtmlTag(token.value);
-      case TokenTypes.ColonWithSpace:
-        return this.parseText(token.value);
-      case TokenTypes.Pipe:
-        return this.parseText(token.value);
+        return this.parseHtmlTag(tokenValue);
       case TokenTypes.Bang:
         return this.parseImage();
-      case TokenTypes.CustomId:
-        return this.parseText(token.value);
     }
 
-    throw new Error(`Unregonize token type '${token.type}'`);
+    throw new Error(`Unregonize token type '${tokenType}'`);
   }
 
   private parseChildren (children: Token[]): Node 
@@ -634,8 +587,9 @@ export class Parser
     throw new Error(`Unregonize token type '${this.currentToken.type}'`);
   }
 
-  parse (): Document 
+  parse (tokens: Token[]): Document 
   {
+    this.tokens = tokens;
     while (this.nextToken()) 
     {
       if (this.currentToken.type === TokenTypes.Blankline)
@@ -643,7 +597,6 @@ export class Parser
 
       this.document.childNodes.push(this.parseBlock());
     }
-
     return this.document;
   }
 }
