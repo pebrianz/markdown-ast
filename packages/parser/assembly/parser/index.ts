@@ -27,10 +27,10 @@ export class Parser
   @inline
   private nextToken (): Token | null 
   {
-    if (this.tokens.length <= 0) return null;
-    this.currentTokens = this.tokens;
+    const tokens = this.tokens;
+    if (tokens.length <= 0) return null;
+    this.currentTokens = tokens;
     this.currentToken = this.currentTokens.shift();
-    
     return this.currentToken;
   }
 
@@ -38,6 +38,7 @@ export class Parser
   {
     if (this.currentToken.children.length <= 0)
       return createNode(50 + markLength);
+
     const children = this.currentToken.children;
     const childNodes: Node[] = [];
 
@@ -70,6 +71,20 @@ export class Parser
     }
 
     return createNode(50 + markLength, textContent, childNodes);
+  }
+
+  private parseFootnoteDefinition (): Node
+  {
+    const blocks: Node[] = [];
+
+    while(this.nextToken())
+    {
+      if (this.currentToken.type === TokenTypes.Blankline) continue;
+
+      blocks.push(this.parseBlock());
+    }
+
+    return createNode(NodeTypes.FootnoteDefinition, '', blocks);
   }
 
   private parseLink (): Node 
@@ -139,7 +154,7 @@ export class Parser
           .references.set(textContent, parsedChildren.textContent);
 
         return createNode(
-          NodeTypes.ReferenceDefinition,
+          NodeTypes.LinkDefinition,
           textContent + parsedChildren.textContent,
           childNodes.concat(parsedChildren.childNodes),
         );
@@ -218,10 +233,10 @@ export class Parser
 
   private parseCode (value: string): Node 
   {
+    const valueLength = value.length;
     let textContent = value.at(1);
 
-    let i = 1;
-    while (++i < value.length) 
+    for (let i = 1; ++i < valueLength;) 
     {
       const char = value.at(i);
 
@@ -243,7 +258,6 @@ export class Parser
   ): Node 
   {
     const children = this.currentToken.children;
-
     if (children.length <= 0) return createNode(nodeType);
 
     const childNodes: Node[] = [];
@@ -309,7 +323,7 @@ export class Parser
       {
         const node = this.parseImage();
         if(node) return node;
-        return this.parseText(token.value);
+        return this.parseText(tokenValue);
       }
         
       case TokenTypes.AutoLink:
@@ -576,15 +590,14 @@ export class Parser
   private parseTableCells (): Node[] 
   {
     const children = this.currentToken.children;
-
     if (children.length <= 0) return [];
-    const childNodes: Node[] = [];
 
+    const childNodes: Node[] = [];
     let currentToken = children.shift();
+
     while (currentToken.type === TokenTypes.Pipe) 
     {
       if (children.length <= 0) break;
-
       childNodes.push(this.parseTableCell());
 
       if (children.length <= 0) break;
@@ -596,18 +609,18 @@ export class Parser
 
   private parseTableRows (): Node[] 
   {
+    const tokens = this.tokens;
     const childNodes: Node[] = [];
 
-    if (this.tokens.length <= 0) return childNodes;
+    if (tokens.length <= 0) return childNodes;
     this.nextToken();
 
     while (this.currentToken.type === TokenTypes.TableRow) 
     {
-      childNodes.push(
-        createNode(NodeTypes.TableRow, '', this.parseTableCells()),
-      );
+      childNodes
+        .push(createNode(NodeTypes.TableRow, '', this.parseTableCells()));
 
-      if (this.tokens.length <= 0) break;
+      if (tokens.length <= 0) break;
       this.nextToken();
     }
 
@@ -618,44 +631,48 @@ export class Parser
   {
     const align: string[] = [];
 
-    if (
-      this.tokens.length > 0 &&
-			this.tokens[0].type === TokenTypes.TableRow &&
-			this.tokens[0].children.length > 0
-    ) 
+    if (this.tokens.length > 0)
     {
       const nextToken = this.tokens[0];
       const nextTokenChildrenLength = nextToken.children.length;
-
-      for(let i = 0; i < nextTokenChildrenLength; i++)
+    
+      if(nextToken.type === TokenTypes.TableRow
+        && nextTokenChildrenLength > 0) 
       {
-        const currentToken = nextToken.children[i];
-        
-        if (currentToken.type === TokenTypes.Text) 
+        for(let i = 0; i < nextTokenChildrenLength; i++)
         {
-          const firstchar = currentToken.value.at(0);
-          const lastchar = currentToken.value.at(-1);
-          const firstlastchar = firstchar + lastchar;
-
-          if (firstchar === '-' || firstchar === ':') 
+          const currentToken = nextToken.children[i];
+          const currentTokenValue = currentToken.value;
+          const currentTokenType = currentToken.type;
+        
+          if (currentTokenType === TokenTypes.Text) 
           {
-            let bool = true;
-            let i = 0;
+            const firstchar = currentTokenValue.at(0);
+            const lastchar = currentTokenValue.at(-1);
+            const firstlastchar = firstchar + lastchar;
 
-            while (++i < currentToken.value.length - 1) 
+            if (firstchar === '-' || firstchar === ':') 
             {
-              if (currentToken.value.at(i) !== '-') bool = false;
-            }
+              let bool = true;
+              let i = 0;
+              const currentTokenValueLenght = currentTokenValue.length - 1;
 
-            if (bool) 
-            {
-              if (firstlastchar === '::') align.push('center');
-              else if (firstlastchar === '-:') align.push('right');
-              else if (lastchar === '-') align.push('left');
+              while (++i < currentTokenValueLenght) 
+              {
+                if (currentTokenValue.at(i) !== '-') bool = false;
+              }
+
+              if (bool) 
+              {
+                if (firstlastchar === '::') align.push('center');
+                else if (firstlastchar === '-:') align.push('right');
+                else if (lastchar === '-') align.push('left');
+              }
             }
           }
         }
       }
+      
     }
 
     if (align.length < 1) return this.parseParagraph();
@@ -682,7 +699,11 @@ export class Parser
 
   private parseBlock (): Node 
   {
-    switch (this.currentToken.type) 
+    const currentToken = this.currentToken;
+    const currentTokenType = currentToken.type;
+    const currentTokenValue = currentToken.value;
+    
+    switch (currentTokenType) 
     {
       case TokenTypes.Paragraph:
         return this.parseParagraph();
@@ -697,7 +718,7 @@ export class Parser
         return createNode(NodeTypes.HorizontalRule);
         
       case TokenTypes.Fenced:
-        return createNode(NodeTypes.Fenced, this.currentToken.value);
+        return createNode(NodeTypes.Fenced, currentTokenValue);
         
       case TokenTypes.UnorderedList:
         return this.parseList();
@@ -709,19 +730,23 @@ export class Parser
         return this.parseTable();
     }
 
-    throw new Error(`Unregonize token type '${this.currentToken.type}'`);
+    throw new Error(`Unregonize token type '${currentTokenType}'`);
   }
 
   parse (tokens: Token[]): Document 
   {
     this.tokens = tokens;
+
+    const document = this.document;
+    const documentChildNodes = document.childNodes;
+
     while (this.nextToken()) 
     {
-      if (this.currentToken.type === TokenTypes.Blankline)
-        if (this.nextToken()) break;
+      if (this.currentToken.type === TokenTypes.Blankline) continue;
 
-      this.document.childNodes.push(this.parseBlock());
+      documentChildNodes.push(this.parseBlock());
     }
-    return this.document;
+
+    return document;
   }
 }

@@ -22,11 +22,12 @@ export enum NodeTypes
   Code = 54,
   Link = 55,
   Image = 56,
-  ReferenceDefinition = 57,
+  LinkDefinition = 57,
   Highlight = 58,
   Strikethrough = 59,
   HtmlTag = 60,
   Footnote = 61,
+  FootnoteDefinition = 62,
 }
 
 export class Node 

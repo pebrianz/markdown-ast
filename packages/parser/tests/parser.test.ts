@@ -33,6 +33,45 @@ describe('parser', async () =>
     expect(ast.childNodes).toMatchObject([expectedParagraph]);
   });
 
+  it('should parse paragraph and skip blankline', () => 
+  {
+    const src = dedent`
+      this is first paragraph
+
+      
+      this is second paragraph
+    `;
+
+    const tokens = tokenize(src);
+    const ast = parse(tokens);
+
+    const expectedResult: Node[] = [
+      {
+        type: NodeTypes.Paragraph,
+        textContent: 'this is first paragraph',
+        childNodes: [
+          {
+            type: NodeTypes.Text,
+            textContent: 'this is first paragraph',
+            childNodes: [],
+          },
+        ],
+      },
+      {
+        type: NodeTypes.Paragraph,
+        textContent: 'this is second paragraph',
+        childNodes: [
+          {
+            type: NodeTypes.Text,
+            textContent: 'this is second paragraph',
+            childNodes: [],
+          },
+        ],
+      },
+    ];
+
+    expect(ast.childNodes).toMatchObject(expectedResult);
+  });
 
   it('should parse heading', () => 
   {

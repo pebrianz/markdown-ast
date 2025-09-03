@@ -14,6 +14,7 @@ export const inlineTokenizer = createMap<
       for (let i = 0; text.charAt(++i) === '*';) 
       {
         mark += text.charAt(i);
+        if (i > 4) return null;
       }
 
       if (mark.length > 3) return null;
@@ -173,7 +174,7 @@ export const inlineTokenizer = createMap<
       const textLength = text.length;
       let value = text.charAt(0);
 
-      for(let i = 0; ++i;)
+      for(let i = 0; ++i < textLength;)
       {
         if(i >= textLength) return null;
         const char = text.charAt(i);

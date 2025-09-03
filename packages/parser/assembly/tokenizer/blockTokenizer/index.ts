@@ -15,6 +15,7 @@ export const blockTokenizer = createMap<
       while (text.charAt(++i) === '#') 
       {
         mark += text.charAt(i);
+        if (i > 7) return null;
       }
 
       if (mark.length > 6 || text.charAt(i) !== ' ') return null;

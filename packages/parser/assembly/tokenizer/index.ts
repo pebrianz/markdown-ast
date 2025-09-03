@@ -15,11 +15,12 @@ export class Tokenizer
   @inline
   private nextLine (): string | null 
   {
-    if (this.lines.length <= 0) return null;
-    this.currentLine = this.lines.shift();
+    const lines = this.lines;
+    if (lines.length <= 0) return null;
+    const currentLine = lines.shift();
+    this.currentLine = currentLine;
     this.currentLineNumber++;
-
-    return this.currentLine;
+    return currentLine;
   }
 
   private tokenizeInline (line: string, column: u16): Token[] 
@@ -147,46 +148,42 @@ export class Tokenizer
       }
         
       case TokenTypes.UnorderedList: {
-        token.children.push(
-          this.tokenizeBlock(trimed.slice(token.value.length), column),
-        );
+        token.children
+          .push(this.tokenizeBlock(trimed.slice(token.value.length), column));
         return token;
       }
         
       case TokenTypes.OrderedList: {
-        token.children.push(
-          this.tokenizeBlock(trimed.slice(token.value.length), column),
-        );
+        token.children
+          .push(this.tokenizeBlock(trimed.slice(token.value.length), column));
         return token;
       }
         
       case TokenTypes.Blockquotes: {
-        token.children.push(
-          this.tokenizeBlock(trimed.slice(token.value.length), column),
-        );
+        token.children
+          .push(this.tokenizeBlock(trimed.slice(token.value.length), column));
 
-        if (this.lines.length <= 0) return token;
-        let key = this.lines[0].trimStart().charAt(0);
+        const lines = this.lines;
+
+        if (lines.length <= 0) return token;
+        let key = lines[0].trimStart().charAt(0);
 
         while (key === '>') 
         {
           this.nextLine();
-          token.children = token.children.concat(
-            this.tokenizeBlock(this.currentLine).children,
-          );
+          token.children = token.children
+            .concat(this.tokenizeBlock(this.currentLine).children);
 
-          if (this.lines.length <= 0) break;
-          key = this.lines[0].trimStart().charAt(0);
+          if (lines.length <= 0) break;
+          key = lines[0].trimStart().charAt(0);
         }
 
         return token;
       }
     }
 
-    token.children = this.tokenizeInline(
-      trimed.slice(token.value.length),
-      column + 1,
-    );
+    token.children = this
+      .tokenizeInline(trimed.slice(token.value.length), column + 1);
 
     return token;
   }

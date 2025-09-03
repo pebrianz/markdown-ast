@@ -165,7 +165,7 @@ describe('image, link and references link', async () =>
     const ast = parse(tokens);
 
     const expectedResult: Node = {
-      type: NodeTypes.ReferenceDefinition,
+      type: NodeTypes.LinkDefinition,
       textContent:
       '1: https://github.com/pebrianz/markdown-ast "Markdown Parser"',
       childNodes: [
