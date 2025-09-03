@@ -12,7 +12,7 @@ const parseToText: Set<TokenTypes> = createSet([
   TokenTypes.Pipe,
   TokenTypes.CustomId,
 ]);
-  
+ 
 @final
 export class Parser 
 {
@@ -30,7 +30,7 @@ export class Parser
     if (this.tokens.length <= 0) return null;
     this.currentTokens = this.tokens;
     this.currentToken = this.currentTokens.shift();
-
+    
     return this.currentToken;
   }
 
@@ -43,11 +43,26 @@ export class Parser
 
     let currentToken = children.shift();
     let textContent = '';
+    let recentNode: Node | null = null;
 
     while (currentToken.type !== type) 
     {
       const node = this.parseInline(currentToken);
       textContent += node.textContent;
+
+      if(node.type === NodeTypes.Text)
+      {
+        if(recentNode && recentNode.type === NodeTypes.Text)
+        {
+          recentNode.textContent += node.textContent;
+          if (children.length <= 0) break;
+          currentToken = children.shift();
+          continue;
+        }
+        recentNode = node;
+      }
+      else recentNode = null;
+
       childNodes.push(node);
 
       if (children.length <= 0) break;
@@ -65,11 +80,26 @@ export class Parser
 
     let currentToken = children.shift();
     let textContent = '';
+    let recentNode: Node | null = null;
 
     while (currentToken.type !== TokenTypes.CloseBracket) 
     {
       const node = this.parseInline(currentToken);
       textContent += node.textContent;
+
+      if(node.type === NodeTypes.Text)
+      {
+        if(recentNode && recentNode.type === NodeTypes.Text)
+        {
+          recentNode.textContent += node.textContent;
+          if (children.length <= 0) break;
+          currentToken = children.shift();
+          continue;
+        }
+        recentNode = node;
+      }
+      else recentNode = null;
+
       childNodes.push(node);
 
       if (children.length <= 0) break;
@@ -77,10 +107,17 @@ export class Parser
     }
 
     const attributes = new Map<string, string>();
-    let len = 0;
+    
+    if(textContent.charAt(0) === '^')
+    {
+      attributes.set('reference', textContent);
+      return createNode(NodeTypes.Footnote, '', [], attributes);
+    }
 
     if(children.length <= 0)
       return createNode(NodeTypes.Link, textContent, childNodes, attributes);
+
+    let len = 0;
 
     switch (children[0].type)
     {
@@ -93,14 +130,21 @@ export class Parser
         }
         break;
       }
+      
       case TokenTypes.ColonWithSpace:
       {
-        children.shift();
-        const parsedChildren = this.parseChildren(children);
+        const parsedChildren = this.parseChildren(children, recentNode);
+        
         this.document
-          .linkReferences.set(textContent, parsedChildren.textContent);
-        return this.parseText('');
+          .references.set(textContent, parsedChildren.textContent);
+
+        return createNode(
+          NodeTypes.ReferenceDefinition,
+          textContent + parsedChildren.textContent,
+          childNodes.concat(parsedChildren.childNodes),
+        );
       }
+      
       case TokenTypes.OpenParen:
       {
         if (children.length <= 2) break;
@@ -134,11 +178,12 @@ export class Parser
   }
 
   @inline
-  private parseImage (): Node 
+  private parseImage (): Node | null
   {
     const children = this.currentToken.children;
-    if (children.length <= 0 || children[0].type !== TokenTypes.OpenBracket) 
-      return this.parseText(this.currentToken.value);
+
+    if (children.length <= 0
+      || children[0].type !== TokenTypes.OpenBracket) return null; 
 
     children.shift();
     const link = this.parseLink();
@@ -152,7 +197,7 @@ export class Parser
   }
 
   @inline
-  private parseText (textContent: string): Node 
+  private parseText (textContent: string): Node
   {
     return createNode(NodeTypes.Text, textContent);
   }
@@ -205,11 +250,26 @@ export class Parser
 
     let currentToken = children.shift();
     let textContent = '';
+    let recentNode: Node | null = null;
 
     while (currentToken.type !== tokenType) 
     {
       const node = this.parseInline(currentToken);
       textContent += node.textContent;
+
+      if(node.type === NodeTypes.Text)
+      {
+        if(recentNode && recentNode.type === NodeTypes.Text)
+        {
+          recentNode.textContent += node.textContent;
+          if (children.length <= 0) break;
+          currentToken = children.shift();
+          continue;
+        }
+        recentNode = node;
+      }
+      else recentNode = null;
+      
       childNodes.push(node);
 
       if (children.length <= 0) break;
@@ -224,54 +284,83 @@ export class Parser
     return createNode(NodeTypes.HtmlTag, value);
   }
 
-  private parseInline (token: Token): Node 
+  private parseInline (token: Token): Node
   {
     const tokenType = token.type;
     const tokenValue = token.value;
 
     if(parseToText.has(tokenType)) return this.parseText(tokenValue);
-
+   
     switch (tokenType) 
     {
       case TokenTypes.Asterisk:
         return this.parseBlockItalic(tokenType, tokenValue.length);
+        
+      case TokenTypes.Code:
+        return this.parseCode(tokenValue);
+        
+      case TokenTypes.OpenBracket:
+        return this.parseLink();
+        
+      case TokenTypes.HtmlTag:
+        return this.parseHtmlTag(tokenValue);
+        
+      case TokenTypes.Bang:
+      {
+        const node = this.parseImage();
+        if(node) return node;
+        return this.parseText(token.value);
+      }
+        
+      case TokenTypes.AutoLink:
+        return this.parseAutoLink(tokenValue);
+        
       case TokenTypes.EqualEqual:
         return this.parseWrapedInline(
           TokenTypes.EqualEqual,
           NodeTypes.Highlight,
         );
+
       case TokenTypes.TildeTilde:
         return this.parseWrapedInline(
           TokenTypes.TildeTilde,
           NodeTypes.Strikethrough,
         );
-      case TokenTypes.Code:
-        return this.parseCode(tokenValue);
-      case TokenTypes.OpenBracket:
-        return this.parseLink();
-      case TokenTypes.AutoLink:
-        return this.parseAutoLink(tokenValue);
-      case TokenTypes.HtmlTag:
-        return this.parseHtmlTag(tokenValue);
-      case TokenTypes.Bang:
-        return this.parseImage();
     }
 
-    throw new Error(`Unregonize token type '${tokenType}'`);
+    throw new Error(`Unregonize token type '${this.currentToken.type}'`);
   }
 
-  private parseChildren (children: Token[]): Node 
+  private parseChildren (
+    children: Token[],
+    _recentNode: Node | null = null,
+  ): Node 
   {
     if (children.length <= 0) return createNode(NodeTypes.Document);
     const childNodes: Node[] = [];
 
     let currentToken = children.shift();
     let textContent = '';
+    let recentNode: Node | null = _recentNode;
 
     while (true) 
     {
       const node = this.parseInline(currentToken);
       textContent += node.textContent;
+
+      if(node.type === NodeTypes.Text)
+      {
+        if(recentNode && recentNode.type === NodeTypes.Text)
+        {
+          recentNode.textContent += node.textContent;
+          if (children.length <= 0) break;
+          currentToken = children.shift();
+          continue;
+        }
+        recentNode = node;
+      }
+      else recentNode = null;
+
       childNodes.push(node);
 
       if (children.length <= 0) break;
@@ -281,7 +370,6 @@ export class Parser
     return createNode(NodeTypes.Document, textContent, childNodes);
   }
 
-  @inline
   private parseParagraph (): Node 
   {
     const parsedChildren = this.parseChildren(this.currentToken.children);
@@ -311,11 +399,26 @@ export class Parser
 
     let currentToken = children.shift();
     let textContent = '';
+    let recentNode: Node | null = null;
 
     while (true) 
     {
       const node = this.parseInline(currentToken);
       textContent += node.textContent;
+
+      if(node.type === NodeTypes.Text)
+      {
+        if(recentNode && recentNode.type === NodeTypes.Text)
+        {
+          recentNode.textContent += node.textContent;
+          if (children.length <= 0) break;
+          currentToken = children.shift();
+          continue;
+        }
+        recentNode = node;
+      }
+      else recentNode = null;
+
       childNodes.push(node);
 
       if (children.length <= 0) break;
@@ -437,11 +540,26 @@ export class Parser
 
     let currentToken = children.shift();
     let textContent = '';
+    let recentNode: Node | null = null;
 
     while (currentToken.type !== TokenTypes.Pipe) 
     {
       const node = this.parseInline(currentToken);
       textContent += node.textContent;
+
+      if(node.type === NodeTypes.Text)
+      {
+        if(recentNode && recentNode.type === NodeTypes.Text)
+        {
+          recentNode.textContent += node.textContent;
+          if (children.length <= 0) break;
+          currentToken = children.shift();
+          continue;
+        }
+        recentNode = node;
+      }
+      else recentNode = null;
+
       childNodes.push(node);
 
       if (children.length <= 0) break;
@@ -568,18 +686,25 @@ export class Parser
     {
       case TokenTypes.Paragraph:
         return this.parseParagraph();
+        
       case TokenTypes.Heading:
         return this.parseHeading();
+        
       case TokenTypes.Blockquotes:
         return this.parseBlockquotes();
+        
       case TokenTypes.HorizontalRule:
         return createNode(NodeTypes.HorizontalRule);
+        
       case TokenTypes.Fenced:
         return createNode(NodeTypes.Fenced, this.currentToken.value);
+        
       case TokenTypes.UnorderedList:
         return this.parseList();
+        
       case TokenTypes.OrderedList:
         return this.parseList();
+        
       case TokenTypes.TableRow:
         return this.parseTable();
     }

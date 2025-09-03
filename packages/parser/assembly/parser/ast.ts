@@ -22,10 +22,11 @@ export enum NodeTypes
   Code = 54,
   Link = 55,
   Image = 56,
-  LinkReference = 57,
+  ReferenceDefinition = 57,
   Highlight = 58,
   Strikethrough = 59,
   HtmlTag = 60,
+  Footnote = 61,
 }
 
 export class Node 
@@ -46,6 +47,6 @@ export class Document
 
   childNodes: Node[] = [];
 
-  linkReferences: Map<string, string> = new Map<string, string>();
+  references: Map<string, string> = new Map<string, string>();
 }
 

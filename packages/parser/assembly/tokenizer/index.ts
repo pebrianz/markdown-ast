@@ -145,18 +145,21 @@ export class Tokenizer
 
         return token;
       }
+        
       case TokenTypes.UnorderedList: {
         token.children.push(
           this.tokenizeBlock(trimed.slice(token.value.length), column),
         );
         return token;
       }
+        
       case TokenTypes.OrderedList: {
         token.children.push(
           this.tokenizeBlock(trimed.slice(token.value.length), column),
         );
         return token;
       }
+        
       case TokenTypes.Blockquotes: {
         token.children.push(
           this.tokenizeBlock(trimed.slice(token.value.length), column),

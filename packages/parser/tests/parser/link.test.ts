@@ -164,9 +164,24 @@ describe('image, link and references link', async () =>
     const tokens = tokenize(src);
     const ast = parse(tokens);
 
-    const reference = getMapValue(ast.linkReferences, '1');
+    const expectedResult: Node = {
+      type: NodeTypes.ReferenceDefinition,
+      textContent:
+      '1: https://github.com/pebrianz/markdown-ast "Markdown Parser"',
+      childNodes: [
+        {
+          type: NodeTypes.Text,
+          textContent:
+            '1: https://github.com/pebrianz/markdown-ast "Markdown Parser"',
+          childNodes: [],
+        },
+      ],
+    };
+    expect(ast.childNodes[0].childNodes).toMatchObject([expectedResult]);
+
+    const reference = getMapValue(ast.references, '1');
     expect(reference)
-      .toBe('https://github.com/pebrianz/markdown-ast "Markdown Parser"');
+      .toBe(': https://github.com/pebrianz/markdown-ast "Markdown Parser"');
   });
 
   it('should parse link with attribute reference label', () => 
@@ -179,6 +194,37 @@ describe('image, link and references link', async () =>
     const link = ast.childNodes[0].childNodes[0];
     const reference = getMapValue(link.attributes, 'reference');
     expect(reference).toBe('reference');
+  });
+
+  it('should parse footnode', () =>
+  {
+    const src = 'this is text.[^1](abc)';
+
+    const tokens = tokenize(src);
+    const ast = parse(tokens);
+
+    const expectedResult: Node = {
+      type: NodeTypes.Paragraph,
+      textContent: 'this is text.(abc)',
+      childNodes: [
+        {
+          type: NodeTypes.Text,
+          textContent: 'this is text.',
+          childNodes: [],
+        },
+        {
+          type: NodeTypes.Footnote,
+          textContent: '',
+          childNodes: [],
+        },
+        {
+          type: NodeTypes.Text,
+          textContent: '(abc)',
+          childNodes: [],
+        },
+      ],
+    };
+    expect(ast.childNodes).toMatchObject([expectedResult]);
   });
 
   it('should treat as text, if missing closing parenthesis', () =>
@@ -200,12 +246,7 @@ describe('image, link and references link', async () =>
       },
       {
         type: NodeTypes.Text,
-        textContent: '(',
-        childNodes: [],
-      },
-      {
-        type: NodeTypes.Text,
-        textContent: 'url',
+        textContent: '(url',
         childNodes: [],
       },
     ];
@@ -231,21 +272,30 @@ describe('image, link and references link', async () =>
       },
       {
         type: NodeTypes.Text,
-        textContent: '(',
-        childNodes: [],
-      },
-      {
-        type: NodeTypes.Text,
-        textContent: 'url ',
-        childNodes: [],
-      },
-      {
-        type: NodeTypes.Text,
-        textContent: '"title)',
+        textContent: '(url "title)',
         childNodes: [],
       },
     ];
     expect(ast.childNodes[0].childNodes).toMatchObject(expectedResult);
+  });
+
+  it('should treat bang as text, if next char is not open bracket', () =>
+  {
+    const src = 'text !alt](src)';
+
+    const tokens = tokenize(src);
+    const ast = parse(tokens);
+
+    const expectedResult: Node = {
+      type: NodeTypes.Paragraph,
+      textContent: 'text !alt](src)',
+      childNodes: [{
+        type: NodeTypes.Text,
+        textContent: 'text !alt](src)',
+        childNodes: [],
+      }],
+    };
+    expect(ast.childNodes).toMatchObject([expectedResult]);
   });
 
   it('should treat referencelabel as another link, if missing close bracket',

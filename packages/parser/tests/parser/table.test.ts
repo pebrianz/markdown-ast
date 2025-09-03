@@ -131,37 +131,7 @@ describe('table', async ()=>
         childNodes: [
           {
             type: NodeTypes.Text,
-            textContent: '|',
-            childNodes: [],
-          },
-          {
-            type: NodeTypes.Text,
-            textContent: ' header1 ',
-            childNodes: [],
-          },
-          {
-            type: NodeTypes.Text,
-            textContent: '|',
-            childNodes: [],
-          },
-          {
-            type: NodeTypes.Text,
-            textContent: ' header2 ',
-            childNodes: [],
-          },
-          {
-            type: NodeTypes.Text,
-            textContent: '|',
-            childNodes: [],
-          },
-          {
-            type: NodeTypes.Text,
-            textContent: ' header3 ',
-            childNodes: [],
-          },
-          {
-            type: NodeTypes.Text,
-            textContent: '|',
+            textContent: '| header1 | header2 | header3 |',
             childNodes: [],
           },
         ],
@@ -172,37 +142,7 @@ describe('table', async ()=>
         childNodes: [
           {
             type: NodeTypes.Text,
-            textContent: '|',
-            childNodes: [],
-          },
-          {
-            type: NodeTypes.Text,
-            textContent: ' cellA ',
-            childNodes: [],
-          },
-          {
-            type: NodeTypes.Text,
-            textContent: '|',
-            childNodes: [],
-          },
-          {
-            type: NodeTypes.Text,
-            textContent: ' cellB ',
-            childNodes: [],
-          },
-          {
-            type: NodeTypes.Text,
-            textContent: '|',
-            childNodes: [],
-          },
-          {
-            type: NodeTypes.Text,
-            textContent: ' cellC ',
-            childNodes: [],
-          },
-          {
-            type: NodeTypes.Text,
-            textContent: '|',
+            textContent: '| cellA | cellB | cellC |',
             childNodes: [],
           },
         ],
